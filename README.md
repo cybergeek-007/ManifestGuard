@@ -28,6 +28,7 @@ Most users don't realize that browser extensions like password managers, ad-bloc
 
 **Try it out**: [ManifestGuard Demo](https://manifestguard.streamlit.app/) 
 <br>
+<br>
 ![Interface](screenshot.png)
 To deploy your own instance:
 - **Streamlit Cloud**: [![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
