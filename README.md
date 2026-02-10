@@ -26,8 +26,8 @@ Most users don't realize that browser extensions like password managers, ad-bloc
 
 > **Note**: This tool scans **local** Chrome extensions on your machine, so a live demo has limited functionality. For full features, please run locally.
 
-**Try it out**: [ManifestGuard Demo](https://your-demo-url-here.streamlit.app) 
-
+**Try it out**: [ManifestGuard Demo](https://manifestguard.streamlit.app/) 
+![Interface](screenshot.png)
 To deploy your own instance:
 - **Streamlit Cloud**: [![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
 - **Hugging Face Spaces**: Fork and deploy as a Streamlit Space
