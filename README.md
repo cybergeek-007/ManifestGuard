@@ -121,14 +121,14 @@ ManifestGuard uses a weighted scoring system to calculate privacy risk:
 ### Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+┌─────────────────┐     ┌──────────────────┐     ┌───────────────── ┐
 │   OS Detection  │────▶│  Extension Scan  │────▶│ Manifest Parser │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
+└─────────────────┘     └──────────────────┘     └─────────────── ──┘
                                                            │
                            ┌───────────────────────────────┘
                            ▼
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   AI Analysis   │◀────│  Risk Calculator │◀────│ Permission Map  │
+│   AI Analysis   │◀───│  Risk Calculator │◀────│ Permission Map  │
 │   (Groq API)    │     │   (0-100 Score)  │     │ (Weighted pts)  │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
          │
