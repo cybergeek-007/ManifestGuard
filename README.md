@@ -122,7 +122,7 @@ ManifestGuard uses a weighted scoring system to calculate privacy risk:
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌───────────────── ┐
-│   OS Detection  │────▶│  Extension Scan  │────▶│ Manifest Parser │
+│   OS Detection  │───▶│  Extension Scan  │────▶│ Manifest Parser  │
 └─────────────────┘     └──────────────────┘     └─────────────── ──┘
                                                            │
                            ┌───────────────────────────────┘
