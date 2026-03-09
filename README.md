@@ -1,208 +1,345 @@
-# 🛡️ ManifestGuard - AI-Powered Local Extension Auditor
+<div align="center">
 
-> **"Know what your browser extensions know about you."**
+```
+ ███╗   ███╗ █████╗ ███╗   ██╗██╗███████╗███████╗ ██████╗████████╗
+ ████╗ ████║██╔══██╗████╗  ██║██║██╔════╝██╔════╝██╔════╝╚══██╔══╝
+ ██╔████╔██║███████║██╔██╗ ██║██║█████╗  █████╗  ╚█████╗    ██║   
+ ██║╚██╔╝██║██╔══██║██║╚██╗██║██║██╔══╝  ██╔══╝   ╚═══██╗   ██║   
+ ██║ ╚═╝ ██║██║  ██║██║ ╚████║██║██║     ███████╗██████╔╝   ██║   
+ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝     ╚══════╝╚═════╝    ╚═╝   
+              ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗               
+             ██╔════╝ ██║   ██║██╔══██╗██╔══██╗██╔══██╗              
+             ██║  ██╗ ██║   ██║███████║██████╔╝██║  ██║              
+             ██║  ╚██╗██║   ██║██╔══██║██╔══██╗██║  ██║              
+             ╚██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝              
+              ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝               
+```
 
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Streamlit](https://img.shields.io/badge/streamlit-1.28+-ff4b4b.svg)](https://streamlit.io/)
-[![Groq](https://img.shields.io/badge/Groq-API-orange.svg)](https://console.groq.com)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+### `> AI-Powered Local Extension Auditor_`
+
+<br>
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                                                          │
+│  "Know what your browser extensions know about you."     │
+│                                                          │
+│  [ SCANNING... ]  ██████████████████████████░░  89%      │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+<br>
+
+![Python 3.9+](https://img.shields.io/badge/python-3.9+-00ff41?style=for-the-badge&logo=python&logoColor=00ff41&labelColor=0d1117)
+![Streamlit](https://img.shields.io/badge/streamlit-1.28+-00ff41?style=for-the-badge&logo=streamlit&logoColor=00ff41&labelColor=0d1117)
+![Groq](https://img.shields.io/badge/Groq-LLM-00ff41?style=for-the-badge&logo=openai&logoColor=00ff41&labelColor=0d1117)
+![License](https://img.shields.io/badge/license-MIT-00ff41?style=for-the-badge&labelColor=0d1117)
+![Status](https://img.shields.io/badge/status-ACTIVE-00ff41?style=for-the-badge&labelColor=0d1117)
+
+</div>
 
 ---
 
-## 📖 Overview
+```
+root@manifestguard:~# cat /etc/motd
+```
 
-Most users don't realize that browser extensions like password managers, ad-blockers, or even simple productivity tools can technically **"read and change all your data"** on every website you visit. This powerful access is often necessary for functionality, but it also represents a significant privacy and security risk if misused.
+## `> ./overview.sh`
 
-**ManifestGuard** is a beginner-friendly, locally-run tool that:
+Most users have **no idea** what their browser extensions can see. That password manager? It can read **every page you visit**. That cute tab organizer? It has access to your **entire browsing history**.
 
-- 🔍 **Automatically scans** your Chrome extensions directory
-- 📊 **Calculates risk scores** based on permission severity
-- 🤖 **Uses AI** to translate technical manifest files into human-readable security warnings
-- 🔐 **Empowers you** to make informed decisions about your browser privacy
+```diff
++ Extensions request powerful permissions
++ Most users click "Add to Chrome" without reading
+- Your data is exposed by default
+- There's no built-in audit tool in Chrome
+```
+
+**ManifestGuard** changes that. It's your local recon tool that:
+
+```
+[*] Scans your Chrome extensions directory         ✓
+[*] Decodes manifest.json permission flags         ✓
+[*] Calculates weighted risk scores (0-100)        ✓
+[*] Uses Llama 3.3 to translate tech → English     ✓
+[*] Runs 100% locally — your data never leaves     ✓
+```
 
 ---
 
-## 🌐 Live Demo
+## `> cat features.log`
 
-> **Note**: This tool scans **local** Chrome extensions on your machine, so a live demo has limited functionality. For full features, please run locally.
+```
+┌─────────────────────────────────────────────────────────────┐
+│  MODULE              │  STATUS  │  DESCRIPTION              │
+├─────────────────────────────────────────────────────────────┤
+│  os_detect.py        │  [LIVE]  │  Auto-detects Win/Mac/Lin │
+│  ext_scanner.py      │  [LIVE]  │  Enumerates all ext dirs  │
+│  risk_engine.py      │  [LIVE]  │  0-100 weighted scoring   │
+│  ai_analyzer.py      │  [LIVE]  │  Llama 3.3 via Groq API   │
+│  manifest_parser.py  │  [LIVE]  │  JSON permission decoder  │
+│  ui_renderer.py      │  [LIVE]  │  Streamlit dashboard      │
+└─────────────────────────────────────────────────────────────┘
+```
 
-**Try it out**: [ManifestGuard Demo](https://manifestguard.streamlit.app/) 
-<br>
-<br>
+| Feature | Detail |
+|:--------|:-------|
+| 🖥️ **Zero-Input Audit** | Auto-scans Chrome extensions — no paths, no config |
+| 📈 **Risk Scoring** | Weighted algorithm: CRITICAL (40) → HIGH (20) → MEDIUM (10) → LOW (5) |
+| 🤖 **AI Translation** | Converts `"webRequestBlocking"` → *"Can intercept & modify every web request"* |
+| 📋 **Deep Breakdown** | Permissions, host access, content scripts — all decoded |
+| 🔒 **Offline-First** | Scanning is local. Only permission *names* go to AI — never your data |
+| 🎯 **Color-Coded UI** | Risk levels are instantly visible with color indicators |
+
+---
+
+## `> ./demo.sh`
+
+> **Note**: Full functionality requires local execution (Chrome must be installed).
+
+**Try it live**: [manifestguard.streamlit.app](https://manifestguard.streamlit.app/)
+
+```bash
+# Or deploy your own instance:
+docker build -t manifestguard . && docker run -p 8501:8501 manifestguard
+```
+
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
+
 ![Interface](screenshot.png)
-To deploy your own instance:
-- **Streamlit Cloud**: [![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
-- **Hugging Face Spaces**: Fork and deploy as a Streamlit Space
-- **Docker**: `docker build -t manifestguard . && docker run -p 8501:8501 manifestguard`
 
 ---
 
-## ✨ Features
-
-| Feature | Description |
-|---------|-------------|
-| 🖥️ **Zero-Input Audit** | Automatically detects your OS (Windows/Mac/Linux) and scans installed Chrome extensions |
-| 📈 **Risk Scoring** | Algorithm calculates a 0-100 safety score based on permission severity (CRITICAL/HIGH/MEDIUM/LOW) |
-| 🤖 **AI Translation** | Converts technical manifest permissions into plain English using Llama 3.3 via Groq API |
-| 📋 **Detailed Breakdown** | View all permissions, host access, and content script matches for each extension |
-| 🔒 **Privacy-First** | All scanning happens locally; only permission names are sent to AI for analysis |
-| 🎨 **Clean UI** | Intuitive Streamlit interface with color-coded risk indicators |
-
----
-
-## 🚀 Quick Start
+## `> ./install.sh`
 
 ### Prerequisites
 
-- Python 3.9 or higher
-- A [Groq API key](https://console.groq.com) (free tier available)
-- Chrome browser installed
+```
+[✓] Python 3.9+
+[✓] Groq API key (free tier → console.groq.com)
+[✓] Chrome / Chromium browser installed
+```
 
-### Installation
+### Execution
 
-1. **Clone or download this repository:**
-   ```bash
-   git clone https://github.com/yourusername/manifestguard.git
-   cd manifestguard
-   ```
+```bash
+# 1. Clone the repo
+git clone https://github.com/yourusername/manifestguard.git
+cd manifestguard
 
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+# 2. Install dependencies
+pip install -r requirements.txt
 
-3. **Run the application:**
-   ```bash
-   streamlit run app.py
-   ```
+# 3. Launch
+streamlit run app.py
 
-4. **Enter your Groq API key** in the sidebar (get one free at [console.groq.com](https://console.groq.com))
-
-5. **Click "Start Extension Scan"** and review your results!
+# 4. Enter your Groq API key in the sidebar
+# 5. Hit "Start Extension Scan" → profit
+```
 
 ---
 
-## 📊 Risk Scoring System
+## `> cat /var/log/risk_engine.conf`
 
-ManifestGuard uses a weighted scoring system to calculate privacy risk:
-
-| Level | Weight | Examples |
-|-------|--------|----------|
-| 🔴 **CRITICAL** | 40 points | `all_urls`, `webRequestBlocking`, `debugger`, `proxy` |
-| 🟠 **HIGH** | 20 points | `history`, `bookmarks`, `cookies`, `tabs`, `storage` |
-| 🟡 **MEDIUM** | 10 points | `notifications`, `clipboardRead`, `geolocation`, `identity` |
-| 🟢 **LOW** | 5 points | `alarms`, `idle`, `tts`, `printerProvider` |
-
-### Risk Score Interpretation
-
-| Score | Level | Meaning |
-|-------|-------|---------|
-| 70-100 | 🔴 HIGH RISK | Extension has extensive access to your browser and data |
-| 40-69 | 🟠 MEDIUM RISK | Significant permissions that could impact privacy |
-| 20-39 | 🟡 LOW-MEDIUM RISK | Some permissions worth reviewing |
-| 0-19 | 🟢 LOW RISK | Minimal permissions, generally safe |
-
----
-
-## 🖥️ Supported Platforms
-
-| OS | Chrome Path |
-|----|-------------|
-| **Windows** | `%LOCALAPPDATA%\Google\Chrome\User Data\Default\Extensions` |
-| **macOS** | `~/Library/Application Support/Google/Chrome/Default/Extensions` |
-| **Linux** | `~/.config/google-chrome/Default/Extensions` |
-
-*Note: Also supports Chrome Beta, Dev, and Chromium variants.*
-
----
-
-## 🏗️ Technical Details
-
-### Architecture
+### Threat Classification Matrix
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌───────────────── ┐
-│   OS Detection  │───▶│  Extension Scan  │────▶│ Manifest Parser  │
-└─────────────────┘     └──────────────────┘     └─────────────── ──┘
-                                                           │
-                           ┌───────────────────────────────┘
-                           ▼
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   AI Analysis   │◀───│  Risk Calculator │◀────│ Permission Map  │
-│   (Groq API)    │     │   (0-100 Score)  │     │ (Weighted pts)  │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Streamlit UI   │
-│ (Table + Detail)│
-└─────────────────┘
+╔════════════╦════════╦══════════════════════════════════════════╗
+║  SEVERITY  ║ WEIGHT ║  PERMISSION FLAGS                        ║
+╠════════════╬════════╬══════════════════════════════════════════╣
+║  CRITICAL  ║   40   ║  all_urls, webRequestBlocking,           ║
+║    [!!!!]  ║        ║  debugger, proxy, nativeMessaging        ║
+╠════════════╬════════╬══════════════════════════════════════════╣
+║  HIGH      ║   20   ║  history, bookmarks, cookies,            ║
+║    [!!!]   ║        ║  tabs, storage, downloads                ║
+╠════════════╬════════╬══════════════════════════════════════════╣
+║  MEDIUM    ║   10   ║  notifications, clipboardRead,           ║
+║    [!!]    ║        ║  geolocation, identity, webNavigation    ║
+╠════════════╬════════╬══════════════════════════════════════════╣
+║  LOW       ║    5   ║  alarms, idle, tts, contextMenus,        ║
+║    [!]     ║        ║  printerProvider, fontSettings           ║
+╚════════════╩════════╩══════════════════════════════════════════╝
+```
+
+### Risk Score Decoder
+
+```
+ SCORE        VERDICT              ASSESSMENT
+───────────────────────────────────────────────────────
+ 70 - 100     ██████████  [!!!!]   HIGH RISK — extensive data access
+ 40 -  69     ██████░░░░  [!!!]    MEDIUM RISK — significant permissions
+ 20 -  39     ████░░░░░░  [!!]     LOW-MEDIUM — worth reviewing
+  0 -  19     ██░░░░░░░░  [!]      LOW RISK — generally safe
+```
+
+---
+
+## `> uname -a` — Platform Support
+
+```
+PLATFORM        CHROME EXTENSIONS PATH                                          STATUS
+─────────────────────────────────────────────────────────────────────────────────────────
+Windows         %LOCALAPPDATA%\Google\Chrome\User Data\Default\Extensions       [OK]
+macOS           ~/Library/Application Support/Google/Chrome/Default/Extensions   [OK]
+Linux           ~/.config/google-chrome/Default/Extensions                       [OK]
+```
+
+> *Also supports Chrome Beta, Dev, and Chromium variants.*
+
+---
+
+## `> cat architecture.md`
+
+```
+                    ┌─────────────────────────────────────────────┐
+                    │           M A N I F E S T G U A R D         │
+                    └──────────────────┬──────────────────────────┘
+                                       │
+                    ┌──────────────────▼──────────────────────────┐
+                    │            OS DETECTION LAYER               │
+                    │    Win32 │ Darwin │ Linux → path resolver   │
+                    └──────────────────┬──────────────────────────┘
+                                       │
+                    ┌──────────────────▼──────────────────────────┐
+                    │           EXTENSION SCANNER                 │
+                    │   enumerate dirs → locate manifest.json     │
+                    └──────────────────┬──────────────────────────┘
+                                       │
+               ┌───────────────────────┼───────────────────────┐
+               ▼                       ▼                       ▼
+   ┌───────────────────┐  ┌────────────────────┐  ┌───────────────────┐
+   │  MANIFEST PARSER  │  │  PERMISSION MAP    │  │  RISK CALCULATOR  │
+   │  decode JSON      │  │  classify weights  │  │  score 0 → 100    │
+   └─────────┬─────────┘  └──────────┬─────────┘  └─────────┬─────────┘
+             └───────────────────────┼──────────────────────┘
+                                     ▼
+                    ┌───────────────────────────────────────────┐
+                    │           AI ANALYSIS ENGINE              │
+                    │    Groq API → Llama 3.3 70B inference     │
+                    │    "webRequestBlocking" → human english   │
+                    └──────────────────┬────────────────────────┘
+                                       ▼
+                    ┌───────────────────────────────────────────┐
+                    │          STREAMLIT DASHBOARD              │
+                    │   tables │ risk bars │ detail panels      │
+                    └───────────────────────────────────────────┘
 ```
 
 ### Tech Stack
 
-- **Language**: Python 3.9+
-- **Framework**: Streamlit
-- **AI Model**: Llama 3.3 70B via Groq API (OpenAI-compatible)
-- **Dependencies**: `openai`, `pandas`, `streamlit`, `pathlib`
+```
+COMPONENT       TECHNOLOGY              VERSION
+──────────────────────────────────────────────────
+Language        Python                  3.9+
+Framework       Streamlit               1.28+
+AI Model        Llama 3.3 70B           via Groq
+API Client      openai (compatible)     latest
+Data            pandas                  latest
+IO              pathlib, json           stdlib
+```
 
 ---
 
-## 🔮 Future Scope
+## `> cat roadmap.todo`
 
-### The "Cybersecurity Pro" Roadmap
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Multi-Browser Support** | Extend to Edge, Brave, Opera (Chromium-based) | 🚧 Planned |
-| **Behavioral Monitoring** | Analyze background scripts for suspicious network activity | 🔮 Future |
-| **Alternative Suggestions** | Recommend privacy-focused alternatives for high-risk extensions | 🔮 Future |
-| **Historical Tracking** | Track permission changes across extension updates | 🔮 Future |
-| **Export Reports** | Generate PDF/JSON security audit reports | 🔮 Future |
-| **Vulnerability DB** | Cross-reference with known malicious extension databases | 🔮 Future |
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Areas where help is appreciated:
-
-- 🌍 Additional browser support (Firefox, Safari)
-- 🧪 Test coverage for different OS/Chrome configurations
-- 📚 Improved permission classifications
-- 🎨 UI/UX enhancements
-- 🌐 Localization
+```
+[x] Core extension scanner
+[x] Risk scoring engine
+[x] AI-powered analysis via Groq
+[x] Streamlit dashboard
+[ ] Multi-browser support (Edge, Brave, Opera)        # PLANNED
+[ ] Behavioral monitoring of background scripts        # FUTURE
+[ ] Privacy-focused alternative suggestions            # FUTURE
+[ ] Historical permission change tracking              # FUTURE
+[ ] Export PDF/JSON audit reports                       # FUTURE
+[ ] Cross-reference with malicious extension DBs       # FUTURE
+```
 
 ---
 
-## ⚠️ Disclaimer
+## `> cat CONTRIBUTING.md`
 
-**ManifestGuard is an educational tool.** A high risk score does **not** mean an extension is malicious—it simply indicates the extension has powerful permissions that *could* be misused. Many legitimate extensions (password managers, ad blockers, VPNs) require extensive permissions to function.
+```diff
++ Contributions welcome. Areas of interest:
+```
 
-Always:
-- Install extensions only from trusted sources (Chrome Web Store)
-- Review permissions before installing
-- Remove extensions you no longer use
-- Keep extensions updated
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- 🌍 Additional browser support (Firefox `manifest.json` v3, Safari)
+- 🧪 Test coverage for cross-OS Chrome configurations
+- 📚 Improved permission classification weights
+- 🎨 UI/UX upgrades & dark-mode terminal theme
+- 🌐 i18n / localization
 
 ---
 
-## 🙏 Acknowledgments
+## `> cat DISCLAIMER.txt`
 
-- [Groq](https://groq.com) for providing fast, affordable LLM inference
-- [Streamlit](https://streamlit.io) for the fantastic web app framework
-- The Chrome team for maintaining clear extension documentation
+```
+⚠ IMPORTANT ⚠
+
+ManifestGuard is an EDUCATIONAL / AUDIT tool.
+
+A high risk score does NOT mean an extension is malicious.
+It means the extension has powerful permissions that COULD
+be misused. Many legitimate tools (password managers, ad
+blockers, VPNs) REQUIRE extensive permissions to function.
+
+ALWAYS:
+  → Install extensions only from trusted sources
+  → Review permissions BEFORE clicking "Add to Chrome"
+  → Remove extensions you no longer use
+  → Keep extensions updated
+
+You are responsible for your own security decisions.
+```
 
 ---
 
-## 📬 Contact
+## `> cat LICENSE`
 
-Have questions or suggestions? Open an issue or reach out!
+```
+MIT License — free to use, modify, and distribute.
+See LICENSE file for full text.
+```
 
-**Happy (and safe) browsing!** 🌐🔒
+---
+
+## `> cat credits.conf`
+
+```
+[dependencies]
+groq        = "Fast LLM inference"     # https://groq.com
+streamlit   = "Web app framework"      # https://streamlit.io
+chrome_team = "Extension docs"         # https://developer.chrome.com
+
+[acknowledgments]
+llama_3.3   = "Meta AI open model"
+python      = "The language that glues it all"
+```
+
+---
+
+<div align="center">
+
+```
+┌──────────────────────────────────────────────────────┐
+│                                                      │
+│   $ manifestguard --scan --all                       │
+│                                                      │
+│   [✓] 23 extensions found                            │
+│   [✓] Manifests parsed                               │
+│   [✓] Risk scores calculated                         │
+│   [✓] AI analysis complete                           │
+│                                                      │
+│   Your browser is only as safe as its extensions.    │
+│                                                      │
+│   Stay paranoid. Stay safe.   ████████████████████   │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+```
+
+**`> echo "Happy (and safe) browsing" | sha256sum`**
+
+`4a6f8b2c...your_security_is_in_your_hands`
+
+</div>
