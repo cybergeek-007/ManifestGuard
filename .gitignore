@@ -25,9 +25,17 @@ venv/
 env/
 ENV/
 .venv
+.pydeps/
 
 # Environment variables
 .env
+__pycache__/
+*.pyc
+.pytest_cache/
+backend/data/
+frontend/node_modules/
+frontend/dist/
+tests/.tmp/
 
 # IDE
 .vscode/

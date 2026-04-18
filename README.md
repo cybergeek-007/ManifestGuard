@@ -3,38 +3,39 @@
 ```
  ███╗   ███╗ █████╗ ███╗   ██╗██╗███████╗███████╗ ██████╗████████╗
  ████╗ ████║██╔══██╗████╗  ██║██║██╔════╝██╔════╝██╔════╝╚══██╔══╝
- ██╔████╔██║███████║██╔██╗ ██║██║█████╗  █████╗  ╚█████╗    ██║   
- ██║╚██╔╝██║██╔══██║██║╚██╗██║██║██╔══╝  ██╔══╝   ╚═══██╗   ██║   
- ██║ ╚═╝ ██║██║  ██║██║ ╚████║██║██║     ███████╗██████╔╝   ██║   
- ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝     ╚══════╝╚═════╝    ╚═╝   
-              ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗               
-             ██╔════╝ ██║   ██║██╔══██╗██╔══██╗██╔══██╗              
-             ██║  ██╗ ██║   ██║███████║██████╔╝██║  ██║              
-             ██║  ╚██╗██║   ██║██╔══██║██╔══██╗██║  ██║              
-             ╚██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝              
-              ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝               
+ ██╔████╔██║███████║██╔██╗ ██║██║█████╗  █████╗  ╚█████╗    ██║
+ ██║╚██╔╝██║██╔══██║██║╚██╗██║██║██╔══╝  ██╔══╝   ╚═══██╗   ██║
+ ██║ ╚═╝ ██║██║  ██║██║ ╚████║██║██║     ███████╗██████╔╝   ██║
+ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝     ╚══════╝╚═════╝    ╚═╝
+              ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗
+             ██╔════╝ ██║   ██║██╔══██╗██╔══██╗██╔══██╗
+             ██║  ██╗ ██║   ██║███████║██████╔╝██║  ██║
+             ██║  ╚██╗██║   ██║██╔══██║██╔══██╗██║  ██║
+             ╚██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝
+              ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝
 ```
 
-### `> AI-Powered Local Extension Auditor_`
+### `> Evidence-Driven Local Extension Auditor_`
 
 <br>
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                                                          │
-│  "Know what your browser extensions know about you."     │
-│                                                          │
-│  [ SCANNING... ]  ██████████████████████████░░  89%      │
-│                                                          │
-└──────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                                                              │
+│  "Know which extensions are merely powerful, and which are   │
+│   actually suspicious."                                      │
+│                                                              │
+│  [ ANALYZING... ]  ████████████████████████████░░  93%        │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 <br>
 
-![Python 3.9+](https://img.shields.io/badge/python-3.9+-00ff41?style=for-the-badge&logo=python&logoColor=00ff41&labelColor=0d1117)
-![Streamlit](https://img.shields.io/badge/streamlit-1.28+-00ff41?style=for-the-badge&logo=streamlit&logoColor=00ff41&labelColor=0d1117)
-![Groq](https://img.shields.io/badge/Groq-LLM-00ff41?style=for-the-badge&logo=openai&logoColor=00ff41&labelColor=0d1117)
-![License](https://img.shields.io/badge/license-MIT-00ff41?style=for-the-badge&labelColor=0d1117)
+![Python](https://img.shields.io/badge/python-3.14+-00ff41?style=for-the-badge&logo=python&logoColor=00ff41&labelColor=0d1117)
+![FastAPI](https://img.shields.io/badge/fastapi-v2_backend-00ff41?style=for-the-badge&logo=fastapi&logoColor=00ff41&labelColor=0d1117)
+![React](https://img.shields.io/badge/react-typescript_ui-00ff41?style=for-the-badge&logo=react&logoColor=00ff41&labelColor=0d1117)
+![Local First](https://img.shields.io/badge/privacy-local--first-00ff41?style=for-the-badge&labelColor=0d1117)
 ![Status](https://img.shields.io/badge/status-ACTIVE-00ff41?style=for-the-badge&labelColor=0d1117)
 
 </div>
@@ -47,23 +48,28 @@ root@manifestguard:~# cat /etc/motd
 
 ## `> ./overview.sh`
 
-Most users have **no idea** what their browser extensions can see. That password manager? It can read **every page you visit**. That cute tab organizer? It has access to your **entire browsing history**.
+Most extension scanners stop at **permissions**. That creates noise. Security tools, password managers, OSINT helpers, and developer extensions often need broad access to do legitimate work.
+
+**ManifestGuard v2** is built to separate:
 
 ```diff
-+ Extensions request powerful permissions
-+ Most users click "Add to Chrome" without reading
-- Your data is exposed by default
-- There's no built-in audit tool in Chrome
++ powerful but expected access
++ suspicious implementation signals
++ known malicious / removed extension intelligence
+- "all high permissions = malware"
+- missing profile-aware inventory
+- missing localized names and real extension identity
 ```
 
-**ManifestGuard** changes that. It's your local recon tool that:
+It now works like a real local audit system instead of a one-file prototype:
 
 ```
-[*] Scans your Chrome extensions directory         ✓
-[*] Decodes manifest.json permission flags         ✓
-[*] Calculates weighted risk scores (0-100)        ✓
-[*] Uses Llama 3.3 to translate tech → English     ✓
-[*] Runs 100% locally — your data never leaves     ✓
+[*] Enumerates Chrome / Chromium profiles                ✓
+[*] Resolves localized manifest names                    ✓
+[*] Scores power vs suspicion separately                 ✓
+[*] Tracks store status when live checks are enabled     ✓
+[*] Persists past scans under backend/data               ✓
+[*] Exports CSV / JSON / HTML / PDF reports              ✓
 ```
 
 ---
@@ -71,250 +77,274 @@ Most users have **no idea** what their browser extensions can see. That password
 ## `> cat features.log`
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  MODULE              │  STATUS  │  DESCRIPTION              │
-├─────────────────────────────────────────────────────────────┤
-│  os_detect.py        │  [LIVE]  │  Auto-detects Win/Mac/Lin │
-│  ext_scanner.py      │  [LIVE]  │  Enumerates all ext dirs  │
-│  risk_engine.py      │  [LIVE]  │  0-100 weighted scoring   │
-│  ai_analyzer.py      │  [LIVE]  │  Llama 3.3 via Groq API   │
-│  manifest_parser.py  │  [LIVE]  │  JSON permission decoder  │
-│  ui_renderer.py      │  [LIVE]  │  Streamlit dashboard      │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  MODULE                  │ STATUS  │ DESCRIPTION                 │
+├──────────────────────────────────────────────────────────────────┤
+│  backend/scanner.py      │ [LIVE]  │ Multi-profile ext scanner   │
+│  backend/service.py      │ [LIVE]  │ Scan persistence + reports  │
+│  backend/store.py        │ [LIVE]  │ Chrome Web Store checks     │
+│  backend/intel.py        │ [LIVE]  │ Curated bad-extension DB    │
+│  backend/ai.py           │ [LIVE]  │ Optional AI explanations    │
+│  frontend/src/App.tsx    │ [LIVE]  │ React audit dashboard       │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 | Feature | Detail |
 |:--------|:-------|
-| 🖥️ **Zero-Input Audit** | Auto-scans Chrome extensions — no paths, no config |
-| 📈 **Risk Scoring** | Weighted algorithm: CRITICAL (40) → HIGH (20) → MEDIUM (10) → LOW (5) |
-| 🤖 **AI Translation** | Converts `"webRequestBlocking"` → *"Can intercept & modify every web request"* |
-| 📋 **Deep Breakdown** | Permissions, host access, content scripts — all decoded |
-| 🔒 **Offline-First** | Scanning is local. Only permission *names* go to AI — never your data |
-| 🎯 **Color-Coded UI** | Risk levels are instantly visible with color indicators |
+| 🧭 **Tiered Verdicts** | `low_concern`, `powerful_but_expected`, `suspicious`, `known_malicious`, `removed_or_unavailable`, `disabled_by_chrome`, `unknown` |
+| 🧠 **Dual Scoring** | `powerScore` measures reach, `suspicionScore` measures abnormal behavior |
+| 🌍 **Profile-Aware Scans** | Scans `Default`, `Profile 1`, `Profile 2`, Beta/Dev/Chromium roots |
+| 🈯 **Localized Names** | Resolves `__MSG_*__` via `_locales/.../messages.json` instead of showing `Localized Extension` |
+| 📦 **Persistent History** | Reloads past scans from `backend/data/` on startup |
+| 📄 **Rich Reports** | CSV for inventory, JSON for automation, HTML/PDF for shareable review |
 
 ---
 
-## `> ./demo.sh`
+## `> cat detection.engine`
 
-> **Note**: Full functionality requires local execution (Chrome must be installed).
-
-**Try it live**: [manifestguard.streamlit.app](https://manifestguard.streamlit.app/)
-
-```bash
-# Or deploy your own instance:
-docker build -t manifestguard . && docker run -p 8501:8501 manifestguard
-```
-
-[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
-
-![Interface](screenshot.png)
-
----
-
-## `> ./install.sh`
-
-### Prerequisites
+### Classification Strategy
 
 ```
-[✓] Python 3.9+
-[✓] Groq API key (free tier → console.groq.com)
-[✓] Chrome / Chromium browser installed
+POWER SCORE        → "How much browser/data access does this extension have?"
+SUSPICION SCORE    → "How much does its code/package behave like a malicious extension?"
+VERDICT            → "What should the user actually think about it?"
 ```
 
-### Execution
-
-```bash
-# 1. Clone the repo
-git clone https://github.com/yourusername/manifestguard.git
-cd manifestguard
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Launch
-streamlit run app.py
-
-# 4. Enter your Groq API key in the sidebar
-# 5. Hit "Start Extension Scan" → profit
-```
-
----
-
-## `> cat /var/log/risk_engine.conf`
-
-### Threat Classification Matrix
+### Suspicious Signals Checked
 
 ```
-╔════════════╦════════╦══════════════════════════════════════════╗
-║  SEVERITY  ║ WEIGHT ║  PERMISSION FLAGS                        ║
-╠════════════╬════════╬══════════════════════════════════════════╣
-║  CRITICAL  ║   40   ║  all_urls, webRequestBlocking,           ║
-║    [!!!!]  ║        ║  debugger, proxy, nativeMessaging        ║
-╠════════════╬════════╬══════════════════════════════════════════╣
-║  HIGH      ║   20   ║  history, bookmarks, cookies,            ║
-║    [!!!]   ║        ║  tabs, storage, downloads                ║
-╠════════════╬════════╬══════════════════════════════════════════╣
-║  MEDIUM    ║   10   ║  notifications, clipboardRead,           ║
-║    [!!]    ║        ║  geolocation, identity, webNavigation    ║
-╠════════════╬════════╬══════════════════════════════════════════╣
-║  LOW       ║    5   ║  alarms, idle, tts, contextMenus,        ║
-║    [!]     ║        ║  printerProvider, fontSettings           ║
-╚════════════╩════════╩══════════════════════════════════════════╝
+[01] Remote config / heartbeat fetching
+[02] Remote script injection into page context
+[03] CSP or header tampering patterns
+[04] Heavy obfuscation / eval / Function usage
+[05] Broad host access + cookie/session-sensitive perms
+[06] Purpose-permission mismatch
 ```
 
-### Risk Score Decoder
+### Intelligence Inputs
 
 ```
- SCORE        VERDICT              ASSESSMENT
-───────────────────────────────────────────────────────
- 70 - 100     ██████████  [!!!!]   HIGH RISK — extensive data access
- 40 -  69     ██████░░░░  [!!!]    MEDIUM RISK — significant permissions
- 20 -  39     ████░░░░░░  [!!]     LOW-MEDIUM — worth reviewing
-  0 -  19     ██░░░░░░░░  [!]      LOW RISK — generally safe
+LOCAL ANALYSIS            [PRIMARY]
+CHROME WEB STORE STATUS   [OPTIONAL]
+CURATED THREAT REGISTRY   [OPTIONAL]
+AI EXPLANATION LAYER      [OPTIONAL, NON-AUTHORITATIVE]
 ```
-
----
-
-## `> uname -a` — Platform Support
-
-```
-PLATFORM        CHROME EXTENSIONS PATH                                          STATUS
-─────────────────────────────────────────────────────────────────────────────────────────
-Windows         %LOCALAPPDATA%\Google\Chrome\User Data\Default\Extensions       [OK]
-macOS           ~/Library/Application Support/Google/Chrome/Default/Extensions   [OK]
-Linux           ~/.config/google-chrome/Default/Extensions                       [OK]
-```
-
-> *Also supports Chrome Beta, Dev, and Chromium variants.*
 
 ---
 
 ## `> cat architecture.md`
 
 ```
-                    ┌─────────────────────────────────────────────┐
-                    │           M A N I F E S T G U A R D         │
-                    └──────────────────┬──────────────────────────┘
-                                       │
-                    ┌──────────────────▼──────────────────────────┐
-                    │            OS DETECTION LAYER               │
-                    │    Win32 │ Darwin │ Linux → path resolver   │
-                    └──────────────────┬──────────────────────────┘
-                                       │
-                    ┌──────────────────▼──────────────────────────┐
-                    │           EXTENSION SCANNER                 │
-                    │   enumerate dirs → locate manifest.json     │
-                    └──────────────────┬──────────────────────────┘
-                                       │
-               ┌───────────────────────┼───────────────────────┐
-               ▼                       ▼                       ▼
-   ┌───────────────────┐  ┌────────────────────┐  ┌───────────────────┐
-   │  MANIFEST PARSER  │  │  PERMISSION MAP    │  │  RISK CALCULATOR  │
-   │  decode JSON      │  │  classify weights  │  │  score 0 → 100    │
-   └─────────┬─────────┘  └──────────┬─────────┘  └─────────┬─────────┘
-             └───────────────────────┼──────────────────────┘
-                                     ▼
-                    ┌───────────────────────────────────────────┐
-                    │           AI ANALYSIS ENGINE              │
-                    │    Groq API → Llama 3.3 70B inference     │
-                    │    "webRequestBlocking" → human english   │
-                    └──────────────────┬────────────────────────┘
+                  ┌──────────────────────────────────────────┐
+                  │              M A N I F E S T G U A R D   │
+                  └──────────────────────┬───────────────────┘
+                                         │
+                  ┌──────────────────────▼───────────────────┐
+                  │              FASTAPI BACKEND             │
+                  │  scan api │ import api │ report api      │
+                  └──────────────────────┬───────────────────┘
+                                         │
+          ┌──────────────────────────────┼──────────────────────────────┐
+          ▼                              ▼                              ▼
+ ┌──────────────────┐         ┌──────────────────┐          ┌──────────────────┐
+ │ PROFILE SCANNER  │         │ STORE ENRICHMENT │          │ INTEL MATCHER    │
+ │ manifest parsing │         │ listed / removed │          │ known bad IDs    │
+ └────────┬─────────┘         └────────┬─────────┘          └────────┬─────────┘
+          └────────────────────────────┼─────────────────────────────┘
                                        ▼
-                    ┌───────────────────────────────────────────┐
-                    │          STREAMLIT DASHBOARD              │
-                    │   tables │ risk bars │ detail panels      │
-                    └───────────────────────────────────────────┘
+                          ┌──────────────────────────┐
+                          │ CLASSIFICATION ENGINE    │
+                          │ power + suspicion +      │
+                          │ deterministic verdict    │
+                          └────────────┬─────────────┘
+                                       ▼
+                          ┌──────────────────────────┐
+                          │ REACT + TYPESCRIPT UI    │
+                          │ controls │ queue │ detail│
+                          └──────────────────────────┘
 ```
 
-### Tech Stack
+### Project Layout
+
+```text
+backend/
+  api.py
+  main.py
+  serve.py
+  scanner.py
+  service.py
+  reports.py
+  ai.py
+  intel.py
+  store.py
+frontend/
+  src/
+tests/
+app.py
+start-backend.ps1
+start-frontend.ps1
+start-dev.ps1
+```
+
+---
+
+## `> ./install.sh`
+
+### Requirements
 
 ```
-COMPONENT       TECHNOLOGY              VERSION
-──────────────────────────────────────────────────
-Language        Python                  3.9+
-Framework       Streamlit               1.28+
-AI Model        Llama 3.3 70B           via Groq
-API Client      openai (compatible)     latest
-Data            pandas                  latest
-IO              pathlib, json           stdlib
+[✓] Python 3.14+
+[✓] Node.js / npm.cmd
+[✓] Chrome / Chromium installed locally
+[✓] Optional AI key for summaries
+```
+
+### Backend
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Default Ports
+
+```text
+API      → http://127.0.0.1:8000
+WEB UI   → http://127.0.0.1:5173
+```
+
+---
+
+## `> cat windows.shortcuts`
+
+```powershell
+.\start-backend.ps1
+.\start-frontend.ps1
+```
+
+Detached startup:
+
+```powershell
+.\start-dev.ps1 -Detached
+```
+
+If your backend shell exits unexpectedly:
+
+```powershell
+.\start-backend.ps1 -Detached -WaitForHealth
+```
+
+> On this machine, `npm.cmd` is the reliable frontend launcher instead of bare `npm`.
+
+---
+
+## `> curl /api/routes`
+
+```text
+POST   /api/scans
+GET    /api/scans
+GET    /api/scans/{scanId}
+GET    /api/scans/{scanId}/extensions
+GET    /api/scans/{scanId}/extensions/{extensionId}
+GET    /api/scans/{scanId}/reports/{format}
+POST   /api/imports/csv
+GET    /api/health
+```
+
+---
+
+## `> cat report.formats`
+
+```
+CSV   → flat extension inventory
+JSON  → full structured evidence export
+HTML  → shareable styled audit report
+PDF   → locally rendered printable summary
+```
+
+Stored scan artifacts live in:
+
+```text
+backend/data/
+```
+
+---
+
+## `> cat ai.conf`
+
+AI is optional and does **not** decide the final verdict.
+
+Supported environment variables:
+
+```text
+MANIFESTGUARD_AI_API_KEY
+MANIFESTGUARD_AI_BASE_URL
+MANIFESTGUARD_AI_MODEL
+groq_api_key
+```
+
+Use AI for:
+
+```
+[✓] plain-English explanations
+[✓] summarizing why an extension was flagged
+[✓] user-friendly remediation guidance
+[x] overriding deterministic classification
+```
+
+---
+
+## `> cat notes.txt`
+
+```diff
++ Live Chrome Web Store checks are optional
++ Scan history survives app restarts
++ Known bad IDs can promote verdicts immediately
+- "lookup_failed" does NOT mean removed
+- A powerful extension is NOT automatically malicious
 ```
 
 ---
 
 ## `> cat roadmap.todo`
 
+```text
+[x] Replace Streamlit prototype with FastAPI + React
+[x] Add profile-aware scanner
+[x] Resolve localized manifest strings
+[x] Add store-status enrichment
+[x] Add curated threat-intel registry
+[x] Add persistent scan history
+[x] Add HTML / PDF / JSON reporting
+[ ] Scan-to-scan comparison view
+[ ] One-click remediation actions
+[ ] Multi-browser support (Edge / Brave / Opera)
 ```
-[x] Core extension scanner
-[x] Risk scoring engine
-[x] AI-powered analysis via Groq
-[x] Streamlit dashboard
-[ ] Multi-browser support (Edge, Brave, Opera)        # PLANNED
-[ ] Behavioral monitoring of background scripts        # FUTURE
-[ ] Privacy-focused alternative suggestions            # FUTURE
-[ ] Historical permission change tracking              # FUTURE
-[ ] Export PDF/JSON audit reports                       # FUTURE
-[ ] Cross-reference with malicious extension DBs       # FUTURE
-```
-
----
-
-## `> cat CONTRIBUTING.md`
-
-```diff
-+ Contributions welcome. Areas of interest:
-```
-
-- 🌍 Additional browser support (Firefox `manifest.json` v3, Safari)
-- 🧪 Test coverage for cross-OS Chrome configurations
-- 📚 Improved permission classification weights
-- 🎨 UI/UX upgrades & dark-mode terminal theme
-- 🌐 i18n / localization
 
 ---
 
 ## `> cat DISCLAIMER.txt`
 
 ```
-⚠ IMPORTANT ⚠
+ManifestGuard is an audit and triage tool.
 
-ManifestGuard is an EDUCATIONAL / AUDIT tool.
+It is designed to reduce false positives, not eliminate judgment.
+A verdict of "powerful_but_expected" means the extension has broad
+reach but currently lacks stronger malicious evidence.
 
-A high risk score does NOT mean an extension is malicious.
-It means the extension has powerful permissions that COULD
-be misused. Many legitimate tools (password managers, ad
-blockers, VPNs) REQUIRE extensive permissions to function.
-
-ALWAYS:
-  → Install extensions only from trusted sources
-  → Review permissions BEFORE clicking "Add to Chrome"
-  → Remove extensions you no longer use
-  → Keep extensions updated
-
-You are responsible for your own security decisions.
-```
-
----
-
-## `> cat LICENSE`
-
-```
-MIT License — free to use, modify, and distribute.
-See LICENSE file for full text.
-```
-
----
-
-## `> cat credits.conf`
-
-```
-[dependencies]
-groq        = "Fast LLM inference"     # https://groq.com
-streamlit   = "Web app framework"      # https://streamlit.io
-chrome_team = "Extension docs"         # https://developer.chrome.com
-
-[acknowledgments]
-llama_3.3   = "Meta AI open model"
-python      = "The language that glues it all"
+Always review:
+  → source trust
+  → publisher reputation
+  → store status
+  → whether you still need the extension
 ```
 
 ---
@@ -322,24 +352,17 @@ python      = "The language that glues it all"
 <div align="center">
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│   $ manifestguard --scan --all                       │
-│                                                      │
-│   [✓] 23 extensions found                            │
-│   [✓] Manifests parsed                               │
-│   [✓] Risk scores calculated                         │
-│   [✓] AI analysis complete                           │
-│                                                      │
-│   Your browser is only as safe as its extensions.    │
-│                                                      │
-│   Stay paranoid. Stay safe.   ████████████████████   │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                                                              │
+│  $ manifestguard --scan --profiles all --live-checks         │
+│                                                              │
+│  [✓] inventory loaded                                        │
+│  [✓] evidence classified                                     │
+│  [✓] reports ready                                           │
+│                                                              │
+│  Your browser is only as safe as the extensions you keep.    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
 ```
-
-**`> echo "Happy (and safe) browsing" | sha256sum`**
-
-`4a6f8b2c...your_security_is_in_your_hands`
 
 </div>
