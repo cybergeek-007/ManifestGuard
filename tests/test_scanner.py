@@ -221,7 +221,7 @@ class ScannerTests(unittest.TestCase):
 
         self.assertTrue(csv_path.exists())
         self.assertTrue(pdf_path.exists())
-        self.assertIn("ManifestGuard v2", html_report)
+        self.assertIn("ManifestGuard v3", html_report)
 
     def test_service_loads_saved_scans_from_disk(self) -> None:
         report_dir = workspace_tempdir() / "persisted"

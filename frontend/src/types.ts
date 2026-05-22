@@ -1,6 +1,8 @@
 export type Verdict =
+  | "trusted"
   | "low_concern"
   | "powerful_but_expected"
+  | "moderate_risk"
   | "suspicious"
   | "known_malicious"
   | "removed_or_unavailable"
@@ -36,6 +38,31 @@ export interface IntelMatch {
   category: string;
 }
 
+export interface ReputationDetails {
+  extension_id: string;
+  user_count: number;
+  user_count_display: string;
+  star_rating: number;
+  review_count: number;
+  last_updated: string;
+  developer_name: string;
+  is_featured: boolean;
+  is_established_publisher: boolean;
+  reputation_score: number;
+  lookup_status: string;
+}
+
+export interface Recommendation {
+  name: string;
+  extension_id: string;
+  publisher: string;
+  category: string;
+  users: string;
+  rating: number;
+  reason: string;
+  install_url: string;
+}
+
 export interface ExtensionFinding {
   id: string;
   name: string;
@@ -61,6 +88,12 @@ export interface ExtensionFinding {
   packageRoot?: string;
   homepageUrl?: string;
   author?: string;
+  // v3 fields
+  category?: string;
+  reputationScore?: number;
+  reputationDetails?: ReputationDetails;
+  adjustedSuspicionScore?: number;
+  recommendations?: Recommendation[];
 }
 
 export interface ScanSummary {
@@ -72,6 +105,7 @@ export interface ScanSummary {
 
 export interface ScanRecord {
   scanId: string;
+  label: string;
   createdAt: string;
   status: string;
   source: string;

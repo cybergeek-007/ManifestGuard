@@ -10,9 +10,41 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
+from backend.allowlist import is_trusted, lookup_allowlist
 from backend.intel import lookup_intel
 from backend.models import ExtensionFinding, ProfileInstall, ScanOptions, SuspiciousSignal
+from backend.reputation import compute_reputation_adjustment, fetch_reputation
 from backend.store import lookup_store_status
+
+# ── Trusted extension allowlist is now in backend/allowlist.py ──────
+
+# ── Category inference keywords ──────────────────────────────
+CATEGORY_KEYWORDS: dict[str, list[str]] = {
+    "password_manager": ["password", "vault", "login", "credential", "autofill", "passkey"],
+    "ad_blocker": ["ad block", "adblock", "ad-block", "tracker", "anti-track", "content blocker"],
+    "privacy_tool": ["privacy", "vpn", "proxy", "encrypt", "anonymous", "do not track"],
+    "developer_tool": ["devtools", "developer tool", "debug", "inspector", "react dev", "vue dev", "redux", "json viewer", "web developer"],
+    "security_tool": ["security", "antivirus", "malware", "phishing", "guard", "protect"],
+    "productivity": ["grammar", "translate", "todoist", "notion", "evernote", "clipboard", "tab manager"],
+    "communication": ["zoom", "slack", "teams", "meet", "chat", "messenger", "discord", "telegram"],
+    "shopping": ["coupon", "cashback", "price", "deal", "shopping", "honey", "discount"],
+    "accessibility": ["dark mode", "dark reader", "high contrast", "screen reader", "text to speech", "dyslexia"],
+    "media": ["youtube", "video", "spotify", "music", "picture in picture", "pip", "volume"],
+}
+
+# Permissions expected for each category — these should NOT trigger suspicion
+CATEGORY_EXPECTED_PERMISSIONS: dict[str, set[str]] = {
+    "password_manager": {"<all_urls>", "*://*/*", "cookies", "tabs", "webRequest", "storage", "activeTab", "scripting", "clipboardRead", "clipboardWrite"},
+    "ad_blocker": {"<all_urls>", "*://*/*", "webRequest", "webRequestBlocking", "declarativeNetRequest", "tabs", "storage"},
+    "privacy_tool": {"<all_urls>", "*://*/*", "webRequest", "webRequestBlocking", "proxy", "cookies", "tabs", "storage"},
+    "developer_tool": {"<all_urls>", "*://*/*", "tabs", "activeTab", "debugger", "scripting", "storage"},
+    "security_tool": {"<all_urls>", "*://*/*", "webRequest", "webRequestBlocking", "tabs", "cookies", "management", "storage"},
+    "productivity": {"<all_urls>", "*://*/*", "activeTab", "tabs", "storage", "clipboardRead", "clipboardWrite"},
+    "communication": {"<all_urls>", "*://*/*", "tabs", "activeTab", "storage", "notifications", "desktopCapture"},
+    "shopping": {"<all_urls>", "*://*/*", "tabs", "activeTab", "storage", "cookies"},
+    "accessibility": {"<all_urls>", "*://*/*", "tabs", "activeTab", "storage", "scripting"},
+    "media": {"<all_urls>", "*://*/*", "tabs", "activeTab", "storage"},
+}
 
 POWER_WEIGHTS = {
     "<all_urls>": 40,
@@ -148,18 +180,39 @@ def parse_message_key(value: str) -> str | None:
     return match.group(1).lower() if match else None
 
 
+def _lookup_message_key(messages: dict[str, Any], key: str) -> str | None:
+    """Case-insensitive lookup in a messages.json dict."""
+    # Try exact match first
+    payload = messages.get(key)
+    if isinstance(payload, dict) and isinstance(payload.get("message"), str):
+        return payload["message"]
+    # Try case-insensitive match
+    key_lower = key.lower()
+    for msg_key, msg_payload in messages.items():
+        if msg_key.lower() == key_lower and isinstance(msg_payload, dict) and isinstance(msg_payload.get("message"), str):
+            return msg_payload["message"]
+    return None
+
+
 def resolve_localized_value(value: str, manifest_dir: Path, default_locale: str | None) -> str:
     key = parse_message_key(value)
     if not key:
         return value
 
-    locale_candidates = []
+    locale_candidates: list[str] = []
     if default_locale:
         locale_candidates.append(default_locale)
-    locale_candidates.extend(["en", "en_US"])
+        # Try variant: en_US -> en, en -> en_US
+        if "_" in default_locale:
+            locale_candidates.append(default_locale.split("_")[0])
+        else:
+            locale_candidates.append(f"{default_locale}_US")
+    locale_candidates.extend(["en", "en_US", "en_GB"])
 
     locale_dir = manifest_dir / "_locales"
     checked: set[str] = set()
+
+    # Phase 1: Try preferred locales
     for locale in locale_candidates:
         if not locale or locale in checked:
             continue
@@ -167,20 +220,29 @@ def resolve_localized_value(value: str, manifest_dir: Path, default_locale: str 
         messages = read_json(locale_dir / locale / "messages.json")
         if not isinstance(messages, dict):
             continue
-        payload = messages.get(key)
-        if isinstance(payload, dict) and isinstance(payload.get("message"), str):
-            return payload["message"]
+        result = _lookup_message_key(messages, key)
+        if result:
+            return result
 
-    for candidate in sorted(locale_dir.iterdir()) if locale_dir.exists() else []:
-        if not candidate.is_dir():
+    # Phase 2: Try every locale directory (sorted so results are deterministic)
+    try:
+        locale_dirs = sorted(locale_dir.iterdir()) if locale_dir.exists() else []
+    except OSError:
+        locale_dirs = []
+
+    for candidate in locale_dirs:
+        if not candidate.is_dir() or candidate.name in checked:
             continue
         messages = read_json(candidate / "messages.json")
         if not isinstance(messages, dict):
             continue
-        payload = messages.get(key)
-        if isinstance(payload, dict) and isinstance(payload.get("message"), str):
-            return payload["message"]
-    return value
+        result = _lookup_message_key(messages, key)
+        if result:
+            return result
+
+    # Phase 3: Return the raw value stripped of __MSG_ wrapper so it's at least readable
+    # Instead of showing "__MSG_appName__", show "appName"
+    return key.replace("_", " ").title()
 
 
 def version_key(version: str) -> tuple[int, ...]:
@@ -247,14 +309,20 @@ def analyze_codebase(package_root: Path, manifest: dict[str, Any], permissions: 
 
     combined = "\n".join(text_blobs)
 
-    if re.search(r"https?://[^\s\"']+", combined) and re.search(r"(alarms\.create|setInterval|setTimeout|fetch\(|XMLHttpRequest|axios\.)", combined):
+    # Tuned remote heartbeat: Require actual fetch/XHR API usage near a URL or high confidence heartbeat APIs
+    # instead of just any HTTP string in the entire bundle.
+    has_network_api = bool(re.search(r'(?:fetch|axios\.[a-z]+|\$\.(?:ajax|get|post))\s*\(|XMLHttpRequest|sendBeacon', combined))
+    has_heartbeat_api = bool(re.search(r'alarms\.create|setInterval|setTimeout', combined))
+    has_url = bool(re.search(r"https?://[^\s\"']+", combined))
+    
+    if has_url and has_network_api and has_heartbeat_api:
         signals.append(
             SuspiciousSignal(
                 code="remote_heartbeat",
                 title="Remote heartbeat or configuration fetch",
-                severity=28,
+                severity=15,  # Lowered from 28 because network requests are common
                 detail="The package appears to contact external services on a schedule or during background activity.",
-                evidence=re.findall(r"https?://[^\s\"']+", combined)[:5],
+                evidence=["fetch/XHR + setInterval/alarms + URL present"],
             )
         )
         timeline.append("Detected code patterns consistent with remote config or heartbeat traffic.")
@@ -271,27 +339,32 @@ def analyze_codebase(package_root: Path, manifest: dict[str, Any], permissions: 
         )
         timeline.append("Detected dynamic loading of remote JavaScript into the page context.")
 
-    if "content-security-policy" in combined or "modifyHeaders" in combined:
+    # Fixed: require BOTH a CSP reference AND active header modification API usage
+    # plus the webRequest/declarativeNetRequest permission to avoid flagging ad blockers
+    has_csp_ref = "content-security-policy" in combined.lower()
+    has_modify = "modifyHeaders" in combined
+    has_modify_perm = {"webRequest", "webRequestBlocking", "declarativeNetRequest"} & set(permissions)
+    if has_csp_ref and has_modify and has_modify_perm:
         signals.append(
             SuspiciousSignal(
                 code="csp_tampering",
                 title="CSP or header tampering",
-                severity=30,
-                detail="The package references header modification or CSP manipulation logic.",
-                evidence=["content-security-policy", "modifyHeaders"],
+                severity=18,  # Lowered from 30
+                detail="The extension actively modifies Content-Security-Policy headers using browser APIs.",
+                evidence=["content-security-policy + modifyHeaders"],
             )
         )
-        timeline.append("Detected request or response header tampering patterns.")
+        timeline.append("Detected active request/response header tampering patterns.")
 
     obfuscation_markers = len(re.findall(r"_0x[a-f0-9]{4,}", combined, flags=re.IGNORECASE))
     eval_markers = len(re.findall(r"\beval\s*\(|\bFunction\s*\(", combined))
-    if obfuscation_markers >= 12 or eval_markers >= 4:
+    if obfuscation_markers >= 20 or eval_markers >= 10:
         signals.append(
             SuspiciousSignal(
                 code="obfuscation_or_eval",
                 title="Heavy obfuscation or runtime code execution",
-                severity=22,
-                detail="The code contains multiple eval/Function calls or obfuscation markers common in concealment-heavy packages.",
+                severity=15,  # Lowered from 22
+                detail="The code contains multiple eval/Function calls or obfuscation markers.",
                 evidence=[f"obfuscation markers: {obfuscation_markers}", f"runtime exec markers: {eval_markers}"],
             )
         )
@@ -331,6 +404,95 @@ def analyze_codebase(package_root: Path, manifest: dict[str, Any], permissions: 
         )
         timeline.append("Detected a mismatch between the stated purpose and the requested access scope.")
 
+    # ── NEW SIGNALS (v3) ──────────────────────────────────────
+
+    # Data exfiltration: reading cookies/storage + sending externally
+    has_cookie_read = bool(re.search(r'chrome\.cookies\.getAll|chrome\.cookies\.get\(', combined))
+    has_external_send = bool(re.search(r'fetch\s*\(|XMLHttpRequest|\$\.ajax|axios\.|sendBeacon', combined))
+    if has_cookie_read and has_external_send:
+        signals.append(
+            SuspiciousSignal(
+                code="data_exfiltration",
+                title="Data exfiltration pattern",
+                severity=32,
+                detail="The extension reads browser cookies/storage AND sends data to external servers — a classic data harvesting pattern.",
+                evidence=["chrome.cookies.getAll + external fetch/XHR"],
+            )
+        )
+        timeline.append("Detected cookie/data reading combined with external data transmission.")
+
+    # Keylogger: listening to keydown/keypress on document/window
+    if re.search(r'addEventListener\s*\(\s*[\'"]key(?:down|press|up)[\'"]', combined) and (
+        re.search(r'document\.addEventListener|window\.addEventListener', combined)
+    ):
+        signals.append(
+            SuspiciousSignal(
+                code="keylogger_pattern",
+                title="Keylogger behavior",
+                severity=35,
+                detail="The extension listens for keyboard events on the document/window level — a pattern commonly used for keystroke logging.",
+                evidence=["document/window keydown/keypress listener"],
+            )
+        )
+        timeline.append("Detected document-level keyboard event interception.")
+
+    # Screen capture
+    if re.search(r'chrome\.tabs\.captureVisibleTab|getDisplayMedia|captureStream', combined):
+        signals.append(
+            SuspiciousSignal(
+                code="screen_capture",
+                title="Screen capture capability",
+                severity=28,
+                detail="The extension can capture screenshots or screen recordings of browser tabs.",
+                evidence=re.findall(r'captureVisibleTab|getDisplayMedia|captureStream', combined)[:3],
+            )
+        )
+        timeline.append("Detected screen/tab capture capability.")
+
+    # Clipboard theft
+    if re.search(r'navigator\.clipboard\.readText|document\.execCommand\s*\(\s*[\'"]paste[\'"]', combined):
+        signals.append(
+            SuspiciousSignal(
+                code="clipboard_theft",
+                title="Clipboard reading",
+                severity=25,
+                detail="The extension reads clipboard content — could be used to steal copied passwords, keys, or sensitive data.",
+                evidence=["navigator.clipboard.readText or execCommand('paste')"],
+            )
+        )
+        timeline.append("Detected clipboard content reading.")
+
+    # Crypto mining patterns
+    if re.search(r'WebAssembly\.instantiate|WebAssembly\.compile', combined) and (
+        re.search(r'stratum|coinhive|cryptonight|minergate|hashrate', combined, re.IGNORECASE)
+        or re.search(r'SharedArrayBuffer|postMessage.*worker', combined)
+    ):
+        signals.append(
+            SuspiciousSignal(
+                code="crypto_mining",
+                title="Potential crypto mining",
+                severity=30,
+                detail="The extension loads WebAssembly modules with patterns associated with cryptocurrency mining.",
+                evidence=["WebAssembly + mining pool indicators"],
+            )
+        )
+        timeline.append("Detected WebAssembly usage with crypto mining indicators.")
+
+    # Credential form access
+    if re.search(r'querySelector(?:All)?\s*\(\s*[\'"].*(?:input\[type.*password|type=[\'"]password)', combined) and (
+        re.search(r'\.value', combined)
+    ):
+        signals.append(
+            SuspiciousSignal(
+                code="credential_access",
+                title="Credential form access",
+                severity=30,
+                detail="The extension accesses password input fields and reads their values — legitimate for password managers, suspicious for others.",
+                evidence=["querySelector('input[type=password]') + .value access"],
+            )
+        )
+        timeline.append("Detected password field value extraction.")
+
     if not timeline:
         timeline.append("No high-confidence malicious code patterns were detected in the local package scan.")
 
@@ -348,8 +510,47 @@ def compute_power_score(permissions: list[str], host_permissions: list[str]) -> 
     return min(score, 100)
 
 
-def compute_suspicion_score(signals: list[SuspiciousSignal], intel_count: int, store_status: str) -> int:
-    score = sum(signal.severity for signal in signals)
+def infer_category(name: str, description: str, permissions: list[str]) -> str | None:
+    """Heuristically determine the extension's functional category."""
+    text = f"{name} {description}".lower()
+    for category, keywords in CATEGORY_KEYWORDS.items():
+        if any(kw in text for kw in keywords):
+            return category
+    return None
+
+
+def compute_suspicion_score(
+    signals: list[SuspiciousSignal],
+    intel_count: int,
+    store_status: str,
+    extension_id: str = "",
+    category: str | None = None,
+    permissions: list[str] | None = None,
+) -> int:
+    # Start with raw signal severity sum
+    filtered_signals = list(signals)
+
+    # If extension belongs to a known category, remove signals caused by expected permissions
+    if category and category in CATEGORY_EXPECTED_PERMISSIONS:
+        expected = CATEGORY_EXPECTED_PERMISSIONS[category]
+        actual_perms = set(permissions or [])
+        # If all the extension's permissions are expected for its category,
+        # reduce the severity of the broad_host_cookie_combo signal
+        if actual_perms <= expected:
+            filtered_signals = [
+                s for s in filtered_signals
+                if s.code != "broad_host_cookie_combo" and s.code != "purpose_permission_mismatch"
+            ]
+
+    # If extension is on the trusted allowlist, zero out all code-level signals
+    if is_trusted(extension_id):
+        filtered_signals = [s for s in filtered_signals if s.code not in {
+            "broad_host_cookie_combo", "purpose_permission_mismatch", "csp_tampering",
+            "credential_access", "keylogger_pattern", "data_exfiltration", 
+            "screen_capture", "clipboard_theft",
+        }]
+
+    score = sum(signal.severity for signal in filtered_signals)
     if intel_count:
         score += 40
     if store_status == "unavailable_or_removed":
@@ -363,20 +564,29 @@ def choose_verdict(
     suspicion_score: int,
     intel_count: int,
     store_status: str,
+    extension_id: str = "",
+    reputation_score: int = -1,
 ) -> str:
+    # Intel match always wins (overrides even trusted)
     if intel_count:
         return "known_malicious"
+    # Trusted extensions bypass suspicion-based verdicts
+    if is_trusted(extension_id) and suspicion_score < 40:
+        return "trusted"
     if enabled_state == "disabled_by_chrome":
         return "disabled_by_chrome"
     if store_status == "unavailable_or_removed":
         return "removed_or_unavailable"
-    if suspicion_score >= 45:
+    if suspicion_score >= 40:
         return "suspicious"
+    # NEW: moderate_risk — fills gap between suspicious and expected
+    if suspicion_score >= 25 and power_score >= 50:
+        return "moderate_risk"
+    if power_score >= 40 and (reputation_score < 0 or reputation_score > 50):
+        return "powerful_but_expected"
     if power_score >= 40:
         return "powerful_but_expected"
-    if power_score >= 0:
-        return "low_concern"
-    return "unknown"
+    return "low_concern"
 
 
 def determine_enabled_state(pref_entry: dict[str, Any]) -> str:
@@ -457,13 +667,14 @@ def collect_profile_installs(channel_family: str, channel_name: str, root: Path,
             version=info["version"],
             manifest_path=str(manifest_path),
         )
+        # Only count granted permissions for power score (not optional ones)
         installs.append(
             RawInstall(
                 extension_id=extension_dir.name,
                 profile_install=profile_install,
                 info=info,
                 suspicious_signals=signals,
-                power_score=compute_power_score(permissions + optional_permissions, host_permissions + optional_host_permissions),
+                power_score=compute_power_score(permissions, host_permissions),
                 suspicion_score=sum(signal.severity for signal in signals),
                 evidence_timeline=timeline,
             )
@@ -504,9 +715,55 @@ def aggregate_installs(raw_installs: list[RawInstall], enable_live_checks: bool,
             if any(profile.profile_install.enabled_state == "disabled_by_chrome" for profile in installs)
             else primary.profile_install.enabled_state
         )
+        # Infer category for purpose-permission alignment
+        category = infer_category(
+            primary.info["name"],
+            primary.info["description"],
+            permissions,
+        )
         power_score = min(max(item.power_score for item in installs), 100)
-        suspicion_score = compute_suspicion_score(list(signals.values()), len(intel_matches), store_status)
-        verdict = choose_verdict(enabled_state, power_score, suspicion_score, len(intel_matches), store_status)
+        raw_suspicion = compute_suspicion_score(
+            list(signals.values()), len(intel_matches), store_status,
+            extension_id=extension_id, category=category, permissions=permissions,
+        )
+
+        # ── Reputation integration (v3) ──────────────────────
+        reputation_score = -1
+        reputation_details = None
+        if enable_live_checks:
+            try:
+                rep = fetch_reputation(extension_id)
+                if rep.lookup_status == "success":
+                    reputation_score = rep.reputation_score
+                    reputation_details = rep.to_dict()
+                    # Apply reputation adjustment to suspicion
+                    adjustment = compute_reputation_adjustment(reputation_score)
+                    adjusted_suspicion = int(raw_suspicion * adjustment)
+                else:
+                    adjusted_suspicion = raw_suspicion
+            except Exception:
+                adjusted_suspicion = raw_suspicion
+        else:
+            adjusted_suspicion = raw_suspicion
+
+        suspicion_score = min(adjusted_suspicion, 100)
+        verdict = choose_verdict(
+            enabled_state, power_score, suspicion_score, len(intel_matches),
+            store_status, extension_id=extension_id,
+            reputation_score=reputation_score,
+        )
+
+        # ── Recommendations for flagged extensions (v3) ──────
+        recommendations: list[dict] = []
+        if verdict in ("suspicious", "moderate_risk", "known_malicious"):
+            try:
+                from backend.recommendations import get_recommendations
+                recs = get_recommendations(
+                    primary.info["name"], primary.info["description"], category
+                )
+                recommendations = [r.to_dict() for r in recs]
+            except Exception:
+                pass
 
         finding = ExtensionFinding(
             id=extension_id,
@@ -530,6 +787,11 @@ def aggregate_installs(raw_installs: list[RawInstall], enable_live_checks: bool,
             package_root=str(Path(primary.profile_install.manifest_path).parent),
             homepage_url=primary.info["homepage_url"],
             author=primary.info["author"],
+            category=category,
+            reputation_score=reputation_score,
+            reputation_details=reputation_details,
+            adjusted_suspicion_score=suspicion_score,
+            recommendations=recommendations,
         )
         findings.append(finding)
     findings.sort(key=lambda item: (item.verdict != "known_malicious", -item.suspicion_score, -item.power_score, item.name.lower()))

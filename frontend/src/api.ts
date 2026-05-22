@@ -1,4 +1,4 @@
-import type { ExtensionFinding, ScanRecord } from "./types";
+import type { ExtensionFinding, Recommendation, ScanRecord } from "./types";
 
 const API_BASE = import.meta.env.VITE_MANIFESTGUARD_API_URL ?? "http://127.0.0.1:8000/api";
 
@@ -28,6 +28,27 @@ export function createScan(payload: {
   });
 }
 
+export function createOnlineScan(payload: {
+  extensions: Array<{
+    id: string;
+    name: string;
+    version: string;
+    description: string;
+    permissions: string[];
+    hostPermissions: string[];
+    enabled: boolean;
+    installType: string;
+  }>;
+  enableAi: boolean;
+  enableDeepScan: boolean;
+}): Promise<ScanRecord> {
+  return request<ScanRecord>("/scans/online", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
 export function fetchScan(scanId: string): Promise<ScanRecord> {
   return request<ScanRecord>(`/scans/${scanId}`);
 }
@@ -38,6 +59,10 @@ export function fetchExtensions(scanId: string): Promise<ExtensionFinding[]> {
 
 export function fetchExtension(scanId: string, extensionId: string): Promise<ExtensionFinding> {
   return request<ExtensionFinding>(`/scans/${scanId}/extensions/${extensionId}`);
+}
+
+export function fetchRecommendations(scanId: string, extensionId: string): Promise<Recommendation[]> {
+  return request<Recommendation[]>(`/scans/${scanId}/extensions/${extensionId}/recommendations`);
 }
 
 export async function importCsv(file: File): Promise<ScanRecord> {

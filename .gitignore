@@ -50,3 +50,9 @@ Thumbs.db
 
 # Streamlit
 .streamlit/
+
+# Legacy and Unused Files
+app.py
+start-dev.ps1
+start-frontend.ps1
+presentation.html

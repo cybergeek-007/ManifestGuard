@@ -1,14 +1,14 @@
 param(
     [switch]$Detached,
     [switch]$WaitForHealth,
-    [string]$Host = "127.0.0.1",
+    [string]$BindAddress = "127.0.0.1",
     [int]$Port = 8000
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$healthUrl = "http://${Host}:${Port}/api/health"
-$command = "python -m backend.serve --host $Host --port $Port"
+$healthUrl = "http://${BindAddress}:${Port}/api/health"
+$command = "python -m backend.serve --host $BindAddress --port $Port"
 
 function Wait-ForHealth {
     param([string]$Url)

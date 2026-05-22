@@ -7,8 +7,8 @@ from backend.api import router
 
 app = FastAPI(
     title="ManifestGuard API",
-    version="2.0.0",
-    summary="Local-first browser extension auditing with evidence-based classification.",
+    version="3.0.0",
+    summary="Browser extension security auditing with reputation engine, behavioral analysis, and safe alternative recommendations.",
 )
 
 app.add_middleware(

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
-import { createScan, fetchExtension, fetchScan, importCsv, listScans, reportUrl } from "./api";
-import type { ExtensionFinding, ScanRecord } from "./types";
+import { createScan, createOnlineScan, fetchExtension, fetchScan, listScans, reportUrl } from "./api";
+import type { ExtensionFinding, Recommendation, ScanRecord } from "./types";
 
 type Filters = {
   verdict: string;
@@ -18,13 +18,33 @@ type ScanFormState = {
 };
 
 const verdictTone: Record<string, string> = {
+  trusted: "tone-teal",
   low_concern: "tone-mint",
   powerful_but_expected: "tone-amber",
+  moderate_risk: "tone-dark-amber",
   suspicious: "tone-orange",
   known_malicious: "tone-red",
   removed_or_unavailable: "tone-red",
   disabled_by_chrome: "tone-slate",
   unknown: "tone-slate",
+};
+
+const CATEGORY_ICONS: Record<string, string> = {
+  password_manager: "🔑",
+  ad_blocker: "🛡️",
+  privacy_tool: "🔒",
+  developer_tool: "🛠️",
+  security_tool: "🔐",
+  productivity: "📋",
+  communication: "💬",
+  shopping: "🛒",
+  accessibility: "♿",
+  media: "🎬",
+  education: "📚",
+  ai_tool: "🤖",
+  google_official: "🔵",
+  microsoft_official: "🟦",
+  vpn_security: "🌐",
 };
 
 function humanizeLabel(value: string): string {
@@ -36,6 +56,92 @@ function splitCsvishInput(value: string): string[] {
     .split(/[,\n]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+type AiSummarySection = {
+  title: string;
+  paragraphs: string[];
+  bullets: string[];
+};
+
+const AI_KNOWN_HEADINGS = ["Risk Summary", "Key Findings", "Recommendation"];
+
+function parseAiSummary(summary?: string | null): AiSummarySection[] | null {
+  if (!summary) return null;
+  const normalized = summary.replace(/\r\n/g, "\n").trim();
+  if (!normalized) return null;
+
+  const lines = normalized
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const sections: AiSummarySection[] = [];
+  let current: AiSummarySection = { title: "Summary", paragraphs: [], bullets: [] };
+
+  const pushCurrent = () => {
+    if (current.paragraphs.length || current.bullets.length) {
+      sections.push(current);
+    }
+  };
+
+  const splitInlineHeading = (headingText: string) => {
+    let title = headingText;
+    let remainder = "";
+    for (const marker of AI_KNOWN_HEADINGS) {
+      const index = headingText.indexOf(marker);
+      if (index >= 0) {
+        const end = index + marker.length;
+        if (headingText.length > end + 1) {
+          title = headingText.slice(0, end).trim();
+          remainder = headingText.slice(end).trim();
+        }
+        break;
+      }
+    }
+    return { title, remainder };
+  };
+
+  for (const line of lines) {
+    if (line.startsWith("## ")) {
+      pushCurrent();
+      const headingText = line.replace(/^##\s+/, "").trim();
+      const { title, remainder } = splitInlineHeading(headingText);
+      current = { title: title || "Summary", paragraphs: [], bullets: [] };
+      if (remainder) {
+        current.paragraphs.push(remainder);
+      }
+      continue;
+    }
+
+    if (/^[-*•]\s+/.test(line)) {
+      current.bullets.push(line.replace(/^[-*•]\s+/, ""));
+      continue;
+    }
+
+    current.paragraphs.push(line);
+  }
+
+  pushCurrent();
+  return sections.length ? sections : null;
+}
+
+function scoreTone(score: number): string {
+  if (score >= 70) return "text-red";
+  if (score >= 40) return "text-amber";
+  return "text-green";
+}
+
+function aiSectionTone(title: string): string {
+  const normalized = title.toLowerCase();
+  if (normalized.includes("risk")) return "ai-tone-risk";
+  if (normalized.includes("finding")) return "ai-tone-findings";
+  if (normalized.includes("recommend")) return "ai-tone-recommendation";
+  return "ai-tone-neutral";
+}
+
+function panelDelay(value: string): CSSProperties {
+  return { "--delay": value } as CSSProperties;
 }
 
 function App() {
@@ -137,19 +243,7 @@ function App() {
     }
   }
 
-  async function handleImport(file: File | null) {
-    if (!file) return;
-    try {
-      setLoading(true);
-      setError(null);
-      const scan = await importCsv(file);
-      await refreshScans(scan.scanId);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "CSV import failed.");
-    } finally {
-      setLoading(false);
-    }
-  }
+
 
   const availableProfiles = useMemo(() => {
     const profiles = new Set<string>();
@@ -177,6 +271,7 @@ function App() {
     });
   }, [extensions, filters]);
 
+
   const reviewQueue = useMemo(() => {
     return [...extensions]
       .filter((item) => ["known_malicious", "suspicious", "removed_or_unavailable"].includes(item.verdict))
@@ -194,59 +289,92 @@ function App() {
 
   const summaryCards = activeScan?.summary.verdictDistribution ?? {};
   const activeOptions = activeScan?.options;
+  const highRiskCount = useMemo(() => {
+    const dist = activeScan?.summary.verdictDistribution ?? {};
+    return (dist.known_malicious ?? 0) + (dist.suspicious ?? 0) + (dist.removed_or_unavailable ?? 0);
+  }, [activeScan]);
+  const scanTimestamp = activeScan ? new Date(activeScan.createdAt).toLocaleString() : "No scans yet";
+  const aiSummarySections = useMemo(
+    () => parseAiSummary(selectedExtension?.aiSummary),
+    [selectedExtension?.aiSummary],
+  );
 
   return (
-    <div className="page-shell">
-      <div className="backdrop" />
-      <header className="hero">
-        <div className="hero-copy">
-          <p className="eyebrow">ManifestGuard v2</p>
-          <h1>Evidence-first browser extension intelligence.</h1>
-          <p className="hero-text">
-            Review Chrome and Chromium extensions as a security inventory, not a basic score table. Separate
-            powerful access from suspicious behavior, track store availability, and export reports that are
-            worth sharing.
-          </p>
-          <div className="hero-actions">
-            <button className="button button-primary" onClick={() => void runScan()} disabled={loading}>
-              {loading ? "Scanning..." : "Start Local Scan"}
-            </button>
-            <label className="button button-secondary">
-              Import CSV
-              <input
-                type="file"
-                accept=".csv"
-                hidden
-                onChange={(event) => void handleImport(event.target.files?.[0] ?? null)}
-              />
-            </label>
+    <div className="app-shell">
+      <div className="bg-aurora" />
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-mark">MG</div>
+          <div>
+            <div className="brand-title">ManifestGuard</div>
+            <div className="brand-subtitle">Evidence-driven extension intelligence</div>
           </div>
         </div>
-        <aside className="hero-card">
-          <div className="hero-card-label">Current posture</div>
-          <div className="hero-card-value">{activeScan?.summary.totalExtensions ?? 0}</div>
-          <div className="hero-card-subtitle">
-            {activeScan ? `${activeScan.source} • ${new Date(activeScan.createdAt).toLocaleString()}` : "no active scan yet"}
-          </div>
-          <div className="mini-grid">
-            {Object.entries(summaryCards).map(([key, value]) => (
-              <div key={key} className="mini-stat">
-                <span>{humanizeLabel(key)}</span>
-                <strong>{value}</strong>
-              </div>
-            ))}
-          </div>
-        </aside>
+        <div className="topbar-actions">
+          <button className="button button-primary" onClick={() => void runScan()} disabled={loading}>
+            {loading ? "Scanning..." : "Run Online Audit"}
+          </button>
+          <button className="button button-ghost" onClick={() => void refreshScans()} disabled={loading}>
+            Refresh scans
+          </button>
+        </div>
       </header>
 
       {error ? <div className="error-banner">{error}</div> : null}
 
-      <main className="layout">
-        <section className="panel panel-overview">
+      <section className="hero">
+        <div className="hero-copy">
+          <p className="eyebrow">ManifestGuard v3</p>
+          <h1>Clear decisions for powerful extensions.</h1>
+          <p className="hero-text">
+            Go beyond permission noise. ManifestGuard correlates deep source analysis with Chrome Web Store reputation to
+            explain which extensions are powerful but expected, and which deserve immediate review.
+          </p>
+          <div className="hero-actions">
+            <div className="hero-chip">Online CRX analysis</div>
+            <div className="hero-chip">Reputation scoring</div>
+            <div className="hero-chip">Safe alternatives</div>
+          </div>
+        </div>
+        <aside className="hero-summary">
+          <div className="summary-heading">
+            <div>
+              <p className="section-kicker">Current snapshot</p>
+              <h2>{activeScan ? activeScan.label || "Active scan" : "No scan selected"}</h2>
+              <p className="muted">{scanTimestamp}</p>
+            </div>
+            <div className="summary-score">
+              <span>Total extensions</span>
+              <strong>{activeScan?.summary.totalExtensions ?? 0}</strong>
+            </div>
+          </div>
+          <div className="summary-grid">
+            <div className="summary-card">
+              <span>High risk queue</span>
+              <strong>{highRiskCount}</strong>
+            </div>
+            <div className="summary-card">
+              <span>Source</span>
+              <strong>{activeScan?.source ?? "—"}</strong>
+            </div>
+            <div className="summary-card">
+              <span>Live checks</span>
+              <strong>{activeOptions?.enableLiveChecks ? "On" : "Off"}</strong>
+            </div>
+            <div className="summary-card">
+              <span>AI summaries</span>
+              <strong>{activeOptions?.enableAi ? "On" : "Off"}</strong>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <main className="main-grid">
+        <section className="panel panel-scans" style={panelDelay("0.05s")}>
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">Overview</p>
-              <h2>Recent scans</h2>
+              <p className="section-kicker">Audit history</p>
+              <h2>Recent runs</h2>
             </div>
           </div>
           <div className="scan-list">
@@ -258,21 +386,19 @@ function App() {
                 onClick={() => void openScan(scan.scanId)}
               >
                 <div>
-                  <strong>{scan.scanId}</strong>
+                  <strong>{scan.label || scan.scanId}</strong>
                   <div className="muted">{new Date(scan.createdAt).toLocaleString()}</div>
-                  <div className="muted muted-inline">{scan.source}</div>
                 </div>
-                <div className="muted">{scan.summary.totalExtensions} extensions</div>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="panel panel-controls">
+        <section className="panel panel-controls" style={panelDelay("0.1s")}>
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">Scan Controls</p>
-              <h2>Choose what to inspect</h2>
+              <p className="section-kicker">Scan controls</p>
+              <h2>Target the right profiles</h2>
             </div>
           </div>
           <div className="form-grid">
@@ -320,16 +446,21 @@ function App() {
             </label>
           </div>
           <div className="tag-row">
-            <span className="tag">Local-first analysis</span>
+            <span className="tag">Online CRX analysis</span>
             <span className="tag">{scanForm.enableLiveChecks ? "live store checks on" : "live store checks off"}</span>
             <span className="tag">{scanForm.enableAi ? "ai summaries on" : "ai summaries off"}</span>
           </div>
+          <div className="controls-actions">
+            <button className="button button-primary" onClick={() => void runScan()} disabled={loading}>
+              {loading ? "Scanning..." : "Run Online Audit"}
+            </button>
+          </div>
         </section>
 
-        <section className="panel panel-kpis">
+        <section className="panel panel-kpis" style={panelDelay("0.15s")}>
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">Dashboard</p>
+              <p className="section-kicker">Posture</p>
               <h2>Verdict distribution</h2>
             </div>
           </div>
@@ -343,17 +474,17 @@ function App() {
           </div>
         </section>
 
-        <section className="panel panel-queue">
+        <section className="panel panel-queue" style={panelDelay("0.2s")}>
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">Priority Queue</p>
+              <p className="section-kicker">Priority queue</p>
               <h2>Review first</h2>
             </div>
           </div>
           {reviewQueue.length === 0 ? (
             <div className="empty">No high-priority findings in the active scan.</div>
           ) : (
-            <div className="queue-list">
+            <div className="queue-list queue-scroll">
               {reviewQueue.map((item) => (
                 <button key={item.id} className="queue-item" onClick={() => void handleSelectExtension(item.id)}>
                   <div>
@@ -362,7 +493,17 @@ function App() {
                   </div>
                   <div className="queue-metrics">
                     <span className={`pill ${verdictTone[item.verdict] ?? "tone-slate"}`}>{humanizeLabel(item.verdict)}</span>
-                    <span className="tag">Suspicion {item.suspicionScore}</span>
+                    <div className="queue-scores">
+                      <span className={`queue-score ${scoreTone(item.powerScore)}`}>Power {item.powerScore}</span>
+                      <span className={`queue-score ${scoreTone(item.suspicionScore)}`}>Susp {item.suspicionScore}</span>
+                      {item.reputationScore != null && item.reputationScore >= 0 ? (
+                        <span className={`queue-score ${item.reputationScore >= 70 ? "rep-high" : item.reputationScore >= 40 ? "rep-mid" : "rep-low"}`}>
+                          Rep {item.reputationScore}
+                        </span>
+                      ) : (
+                        <span className="queue-score">Rep —</span>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -370,7 +511,7 @@ function App() {
           )}
         </section>
 
-        <section className="panel panel-inventory">
+        <section className="panel panel-inventory" style={panelDelay("0.25s")}>
           <div className="panel-heading">
             <div>
               <p className="section-kicker">Inventory</p>
@@ -390,8 +531,10 @@ function App() {
               onChange={(event) => setFilters((current) => ({ ...current, verdict: event.target.value }))}
             >
               <option value="all">All verdicts</option>
+              <option value="trusted">Trusted</option>
               <option value="known_malicious">Known malicious</option>
               <option value="suspicious">Suspicious</option>
+              <option value="moderate_risk">Moderate risk</option>
               <option value="powerful_but_expected">Powerful but expected</option>
               <option value="removed_or_unavailable">Removed or unavailable</option>
               <option value="disabled_by_chrome">Disabled by Chrome</option>
@@ -420,7 +563,7 @@ function App() {
             </select>
           </div>
 
-          <div className="inventory-table">
+          <div className="inventory-table inventory-scroll">
             <table>
               <thead>
                 <tr>
@@ -428,7 +571,7 @@ function App() {
                   <th>Verdict</th>
                   <th>Power</th>
                   <th>Suspicion</th>
-                  <th>Store</th>
+                  <th>Reputation</th>
                   <th>Profiles</th>
                 </tr>
               </thead>
@@ -436,7 +579,12 @@ function App() {
                 {filteredExtensions.map((item) => (
                   <tr key={item.id} onClick={() => void handleSelectExtension(item.id)}>
                     <td>
-                      <div className="table-name">{item.name}</div>
+                      <div className="table-name">
+                        {item.category && CATEGORY_ICONS[item.category] ? (
+                          <span className="category-icon" title={humanizeLabel(item.category)}>{CATEGORY_ICONS[item.category]}</span>
+                        ) : null}
+                        {item.name}
+                      </div>
                       <div className="muted">{item.id}</div>
                     </td>
                     <td>
@@ -444,9 +592,25 @@ function App() {
                         {humanizeLabel(item.verdict)}
                       </span>
                     </td>
-                    <td>{item.powerScore}</td>
-                    <td>{item.suspicionScore}</td>
-                    <td>{item.storeStatus}</td>
+                    <td>
+                      <span className={`score-pill ${scoreTone(item.powerScore)}`}>
+                        {item.powerScore}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`score-pill ${scoreTone(item.suspicionScore)}`}>
+                        {item.suspicionScore}
+                      </span>
+                    </td>
+                    <td>
+                      {item.reputationScore != null && item.reputationScore >= 0 ? (
+                        <span className={`reputation-badge ${item.reputationScore >= 70 ? "rep-high" : item.reputationScore >= 40 ? "rep-mid" : "rep-low"}`}>
+                          {item.reputationScore}
+                        </span>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </td>
                     <td>{item.profiles.map((profile) => profile.profile_name).join(", ")}</td>
                   </tr>
                 ))}
@@ -456,7 +620,7 @@ function App() {
           </div>
         </section>
 
-        <section className="panel panel-detail">
+        <section className="panel panel-detail" style={panelDelay("0.3s")}>
           <div className="panel-heading">
             <div>
               <p className="section-kicker">Extension detail</p>
@@ -466,100 +630,207 @@ function App() {
           {!selectedExtension ? (
             <div className="empty">Pick an extension from the inventory to inspect its evidence.</div>
           ) : (
-            <div className="detail-grid">
-              <div className="detail-card">
-                <h3>Classification</h3>
-                <div className="detail-stats">
-                  <div>
-                    <span className="muted">Verdict</span>
-                    <strong>{humanizeLabel(selectedExtension.verdict)}</strong>
+            <div className="detail-layout">
+              <div className="detail-column">
+                <div className="detail-card">
+                  <div className="detail-header">
+                    <div>
+                      <h3>Classification</h3>
+                      <p className="muted">Verdict and scoring summary</p>
+                    </div>
+                    <span className={`pill ${verdictTone[selectedExtension.verdict] ?? "tone-slate"}`}>
+                      {humanizeLabel(selectedExtension.verdict)}
+                    </span>
                   </div>
-                  <div>
-                    <span className="muted">Power score</span>
-                    <strong>{selectedExtension.powerScore}</strong>
+                  <div className="detail-rows">
+                    <div className="detail-row">
+                      <span className="detail-row-label">Power score</span>
+                      <span className={`detail-row-value score-pill ${scoreTone(selectedExtension.powerScore)}`}>
+                        {selectedExtension.powerScore}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-row-label">Suspicion</span>
+                      <span className={`detail-row-value score-pill ${scoreTone(selectedExtension.suspicionScore)}`}>
+                        {selectedExtension.suspicionScore}
+                      </span>
+                    </div>
+                    {selectedExtension.reputationScore != null && selectedExtension.reputationScore >= 0 ? (
+                      <div className="detail-row">
+                        <span className="detail-row-label">Reputation</span>
+                        <span className={`detail-row-value score-pill ${selectedExtension.reputationScore >= 70 ? "text-green" : selectedExtension.reputationScore >= 40 ? "text-amber" : "text-red"}`}>
+                          {selectedExtension.reputationScore}/100
+                        </span>
+                      </div>
+                    ) : null}
+                    {selectedExtension.category ? (
+                      <div className="detail-row">
+                        <span className="detail-row-label">Category</span>
+                        <span className="detail-row-value">{CATEGORY_ICONS[selectedExtension.category] ?? ""} {humanizeLabel(selectedExtension.category)}</span>
+                      </div>
+                    ) : null}
                   </div>
-                  <div>
-                    <span className="muted">Suspicion score</span>
-                    <strong>{selectedExtension.suspicionScore}</strong>
-                  </div>
+                  <p className="detail-description">{selectedExtension.description || "No description available."}</p>
                 </div>
-                <p>{selectedExtension.description || "No description available."}</p>
-              </div>
 
-              <div className="detail-card">
-                <h3>Suspicious signals</h3>
-                {selectedExtension.suspiciousSignals.length === 0 ? (
-                  <div className="muted">No high-confidence suspicious signals detected.</div>
-                ) : (
-                  selectedExtension.suspiciousSignals.map((signal) => (
-                    <div key={signal.code} className="signal-card">
-                      <strong>{signal.title}</strong>
-                      <p>{signal.detail}</p>
-                      <div className="tag-row">
-                        {signal.evidence.map((evidence) => (
-                          <span key={evidence} className="tag">
-                            {evidence}
-                          </span>
-                        ))}
+                {selectedExtension.reputationDetails ? (
+                  <div className="detail-card">
+                    <h3>Reputation details</h3>
+                    <div className="detail-rows">
+                      <div className="detail-row">
+                        <span className="detail-row-label">Users</span>
+                        <span className="detail-row-value">{selectedExtension.reputationDetails.user_count_display || "Unknown"}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-row-label">Rating</span>
+                        <span className="detail-row-value">{selectedExtension.reputationDetails.star_rating > 0 ? `${selectedExtension.reputationDetails.star_rating}/5 ⭐` : "N/A"}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-row-label">Developer</span>
+                        <span className="detail-row-value">{selectedExtension.reputationDetails.developer_name || "Unknown"}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-row-label">Last updated</span>
+                        <span className="detail-row-value">{selectedExtension.reputationDetails.last_updated || "Unknown"}</span>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
+                    {(selectedExtension.reputationDetails.is_featured || selectedExtension.reputationDetails.is_established_publisher) ? (
+                      <div className="detail-badges">
+                        {selectedExtension.reputationDetails.is_featured ? (
+                          <span className="tag tag-green">✓ Featured</span>
+                        ) : null}
+                        {selectedExtension.reputationDetails.is_established_publisher ? (
+                          <span className="tag tag-green">✓ Established Publisher</span>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
 
-              <div className="detail-card">
-                <h3>Permissions and hosts</h3>
-                <div className="tag-row">
-                  {selectedExtension.permissions.map((permission) => (
-                    <span key={permission} className="tag">
-                      {permission}
-                    </span>
-                  ))}
+                <div className="detail-card">
+                  <h3>Permissions and hosts</h3>
+                  <div className="tag-row tag-row-scroll">
+                    {selectedExtension.permissions.map((permission) => (
+                      <span key={permission} className="tag">
+                        {permission}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="tag-row tag-row-scroll">
+                    {selectedExtension.hostPermissions.map((permission) => (
+                      <span key={permission} className="tag tag-host">
+                        {permission}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="tag-row">
-                  {selectedExtension.hostPermissions.map((permission) => (
-                    <span key={permission} className="tag tag-host">
-                      {permission}
-                    </span>
-                  ))}
+
+                <div className="detail-card">
+                  <h3>AI summary</h3>
+                  {aiSummarySections ? (
+                    <div className="ai-summary">
+                      {aiSummarySections.map((section, index) => (
+                        <div key={`${section.title}-${index}`} className={`ai-section ${aiSectionTone(section.title)}`}>
+                          <div className="ai-title">{section.title}</div>
+                          {section.paragraphs.map((text, textIndex) => (
+                            <p key={`${section.title}-p-${textIndex}`}>{text}</p>
+                          ))}
+                          {section.bullets.length > 0 ? (
+                            <ul>
+                              {section.bullets.map((bullet, bulletIndex) => (
+                                <li key={`${section.title}-b-${bulletIndex}`}>{bullet}</li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>AI is optional and is currently disabled or not configured for this scan.</p>
+                  )}
                 </div>
+
+                {selectedExtension.recommendations && selectedExtension.recommendations.length > 0 ? (
+                  <div className="detail-card recommendation-section">
+                    <h3>Safe alternatives</h3>
+                    <p className="muted">These trusted extensions serve the same purpose:</p>
+                    <div className="recommendation-grid">
+                      {selectedExtension.recommendations.map((rec) => (
+                        <a
+                          key={rec.extension_id}
+                          className="recommendation-card"
+                          href={rec.install_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <div className="rec-header">
+                            <strong>{rec.name}</strong>
+                            <span className="pill tone-teal">trusted</span>
+                          </div>
+                          <div className="muted">{rec.publisher}</div>
+                          {rec.users ? <div className="rec-meta">{rec.users}</div> : null}
+                          <div className="rec-reason">{rec.reason}</div>
+                          <span className="rec-cta">Install from Chrome Web Store →</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
-              <div className="detail-card">
-                <h3>Evidence timeline</h3>
-                <ul className="timeline">
-                  {selectedExtension.evidenceTimeline.map((entry) => (
-                    <li key={entry}>{entry}</li>
-                  ))}
-                </ul>
-              </div>
+              <div className="detail-column">
+                <div className="detail-card">
+                  <h3>Suspicious signals</h3>
+                  {selectedExtension.suspiciousSignals.length === 0 ? (
+                    <div className="muted">No high-confidence suspicious signals detected.</div>
+                  ) : (
+                    selectedExtension.suspiciousSignals.map((signal) => (
+                      <div key={signal.code} className="signal-card">
+                        <strong>{signal.title}</strong>
+                        <p>{signal.detail}</p>
+                        <div className="tag-row">
+                          {signal.evidence.map((evidence) => (
+                            <span key={evidence} className="tag">
+                              {evidence}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
 
-              <div className="detail-card detail-card-wide">
-                <h3>AI summary</h3>
-                <p>{selectedExtension.aiSummary ?? "AI is optional and is currently disabled or not configured for this scan."}</p>
-              </div>
+                <div className="detail-card">
+                  <h3>Evidence timeline</h3>
+                  <ul className="timeline">
+                    {selectedExtension.evidenceTimeline.map((entry) => (
+                      <li key={entry}>{entry}</li>
+                    ))}
+                  </ul>
+                </div>
 
-              <div className="detail-card detail-card-wide">
-                <h3>Threat-intel matches</h3>
-                {selectedExtension.intelMatches.length === 0 ? (
-                  <div className="muted">No curated threat-intel matches for this extension ID.</div>
-                ) : (
-                  selectedExtension.intelMatches.map((match) => (
-                    <article key={`${match.source}-${match.label}`} className="intel-item">
-                      <strong>{match.label}</strong>
-                      <p>{match.detail}</p>
-                      <a href={match.source_url} target="_blank" rel="noreferrer">
-                        {match.source}
-                      </a>
-                    </article>
-                  ))
-                )}
+                <div className="detail-card">
+                  <h3>Threat-intel matches</h3>
+                  {selectedExtension.intelMatches.length === 0 ? (
+                    <div className="muted">No curated threat-intel matches for this extension ID.</div>
+                  ) : (
+                    selectedExtension.intelMatches.map((match) => (
+                      <article key={`${match.source}-${match.label}`} className="intel-item">
+                        <strong>{match.label}</strong>
+                        <p>{match.detail}</p>
+                        <a href={match.source_url} target="_blank" rel="noreferrer">
+                          {match.source}
+                        </a>
+                      </article>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
         </section>
 
-        <section className="panel panel-reports">
+        <section className="panel panel-reports" style={panelDelay("0.35s")}>
           <div className="panel-heading">
             <div>
               <p className="section-kicker">Reports</p>

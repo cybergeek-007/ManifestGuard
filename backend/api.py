@@ -16,6 +16,25 @@ class ScanRequest(BaseModel):
     enableAi: bool = False
 
 
+class OnlineExtensionData(BaseModel):
+    id: str
+    name: str = "Unknown"
+    version: str = ""
+    description: str = ""
+    permissions: list[str] = Field(default_factory=list)
+    hostPermissions: list[str] = Field(default_factory=list)
+    enabled: bool = True
+    installType: str = "normal"
+    homepageUrl: str = ""
+    updateUrl: str = ""
+
+
+class OnlineScanRequest(BaseModel):
+    extensions: list[OnlineExtensionData]
+    enableAi: bool = False
+    enableDeepScan: bool = False
+
+
 def _map_options(payload: ScanRequest) -> ScanOptions:
     return ScanOptions(
         profiles=payload.profiles or None,
@@ -33,6 +52,35 @@ def healthcheck() -> dict[str, str]:
 @router.post("/scans")
 def create_scan(payload: ScanRequest) -> dict:
     scan = service.create_scan(_map_options(payload))
+    return scan.to_summary_dict()
+
+
+@router.post("/scans/online")
+def create_online_scan(payload: OnlineScanRequest) -> dict:
+    """Accept extension metadata from companion browser extension.
+
+    Downloads CRX from Google servers for deep source code analysis
+    if enableDeepScan is True.
+    """
+    extensions_data = [
+        {
+            "id": ext.id,
+            "name": ext.name,
+            "version": ext.version,
+            "description": ext.description,
+            "permissions": ext.permissions,
+            "hostPermissions": ext.hostPermissions,
+            "enabled": ext.enabled,
+            "installType": ext.installType,
+            "homepageUrl": ext.homepageUrl,
+        }
+        for ext in payload.extensions
+    ]
+    scan = service.create_online_scan(
+        extensions_data,
+        enable_ai=payload.enableAi,
+        enable_deep_scan=payload.enableDeepScan,
+    )
     return scan.to_summary_dict()
 
 
@@ -63,6 +111,15 @@ def get_extension(scan_id: str, extension_id: str) -> dict:
     if not finding:
         raise HTTPException(status_code=404, detail="Extension not found")
     return finding.to_detail_dict()
+
+
+@router.get("/scans/{scan_id}/extensions/{extension_id}/recommendations")
+def get_recommendations(scan_id: str, extension_id: str) -> list[dict]:
+    """Get safe alternative recommendations for a flagged extension."""
+    finding = service.get_extension(scan_id, extension_id)
+    if not finding:
+        raise HTTPException(status_code=404, detail="Extension not found")
+    return finding.recommendations
 
 
 @router.get("/scans/{scan_id}/reports/{format_name}")

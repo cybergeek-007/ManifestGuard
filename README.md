@@ -15,7 +15,7 @@
               ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝
 ```
 
-### `> Evidence-Driven Local Extension Auditor_`
+### `> Evidence-Driven Extension Auditor_`
 
 <br>
 
@@ -33,9 +33,9 @@
 <br>
 
 ![Python](https://img.shields.io/badge/python-3.14+-00ff41?style=for-the-badge&logo=python&logoColor=00ff41&labelColor=0d1117)
-![FastAPI](https://img.shields.io/badge/fastapi-v2_backend-00ff41?style=for-the-badge&logo=fastapi&logoColor=00ff41&labelColor=0d1117)
+![FastAPI](https://img.shields.io/badge/fastapi-v3_backend-00ff41?style=for-the-badge&logo=fastapi&logoColor=00ff41&labelColor=0d1117)
 ![React](https://img.shields.io/badge/react-typescript_ui-00ff41?style=for-the-badge&logo=react&logoColor=00ff41&labelColor=0d1117)
-![Local First](https://img.shields.io/badge/privacy-local--first-00ff41?style=for-the-badge&labelColor=0d1117)
+![Cloud Ready](https://img.shields.io/badge/deployment-render_ready-00ff41?style=for-the-badge&labelColor=0d1117)
 ![Status](https://img.shields.io/badge/status-ACTIVE-00ff41?style=for-the-badge&labelColor=0d1117)
 
 </div>
@@ -50,27 +50,18 @@ root@manifestguard:~# cat /etc/motd
 
 Most extension scanners stop at **permissions**. That creates noise. Security tools, password managers, OSINT helpers, and developer extensions often need broad access to do legitimate work.
 
-**ManifestGuard v2** is built to separate:
+**ManifestGuard v3** introduces a true multi-layered approach to extension security, separating legitimate power from actual malice using deep behavioral analysis, publisher reputation, and curated intelligence.
 
 ```diff
-+ powerful but expected access
-+ suspicious implementation signals
-+ known malicious / removed extension intelligence
++ Online backend for deep source-code analysis (CRX extraction)
++ CWS Reputation Engine (scoring extensions 0-100 based on users, ratings, badges)
++ Safe Alternative Recommendations (powered by a 200+ curated allowlist)
++ Tiered Verdicts (including the new `moderate_risk` bucket)
 - "all high permissions = malware"
-- missing profile-aware inventory
-- missing localized names and real extension identity
+- noisy false positives on popular trusted tools
 ```
 
-It now works like a real local audit system instead of a one-file prototype:
-
-```
-[*] Enumerates Chrome / Chromium profiles                ✓
-[*] Resolves localized manifest names                    ✓
-[*] Scores power vs suspicion separately                 ✓
-[*] Tracks store status when live checks are enabled     ✓
-[*] Persists past scans under backend/data               ✓
-[*] Exports CSV / JSON / HTML / PDF reports              ✓
-```
+It now operates as a robust API service ready for cloud deployment (e.g., Render), integrating seamlessly with a companion extension.
 
 ---
 
@@ -80,22 +71,23 @@ It now works like a real local audit system instead of a one-file prototype:
 ┌──────────────────────────────────────────────────────────────────┐
 │  MODULE                  │ STATUS  │ DESCRIPTION                 │
 ├──────────────────────────────────────────────────────────────────┤
-│  backend/scanner.py      │ [LIVE]  │ Multi-profile ext scanner   │
-│  backend/service.py      │ [LIVE]  │ Scan persistence + reports  │
-│  backend/store.py        │ [LIVE]  │ Chrome Web Store checks     │
-│  backend/intel.py        │ [LIVE]  │ Curated bad-extension DB    │
-│  backend/ai.py           │ [LIVE]  │ Optional AI explanations    │
+│  backend/scanner.py      │ [LIVE]  │ Core static code analyzer   │
+│  backend/crx_analyzer.py │ [NEW]   │ Online CRX downloader & ext │
+│  backend/reputation.py   │ [NEW]   │ CWS Reputation Scorer       │
+│  backend/recommendations.│ [NEW]   │ Safe Alternatives Engine    │
+│  backend/allowlist.py    │ [NEW]   │ 200+ Trusted Publishers     │
+│  backend/reports.py      │ [LIVE]  │ Zero-dependency PDF/HTML/CSV│
 │  frontend/src/App.tsx    │ [LIVE]  │ React audit dashboard       │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
 | Feature | Detail |
 |:--------|:-------|
-| 🧭 **Tiered Verdicts** | `low_concern`, `powerful_but_expected`, `suspicious`, `known_malicious`, `removed_or_unavailable`, `disabled_by_chrome`, `unknown` |
-| 🧠 **Dual Scoring** | `powerScore` measures reach, `suspicionScore` measures abnormal behavior |
-| 🌍 **Profile-Aware Scans** | Scans `Default`, `Profile 1`, `Profile 2`, Beta/Dev/Chromium roots |
-| 🈯 **Localized Names** | Resolves `__MSG_*__` via `_locales/.../messages.json` instead of showing `Localized Extension` |
-| 📦 **Persistent History** | Reloads past scans from `backend/data/` on startup |
+| 🧭 **Tiered Verdicts** | `low_concern`, `powerful_but_expected`, `moderate_risk`, `suspicious`, `known_malicious`, `removed_or_unavailable`, `disabled_by_chrome`, `unknown` |
+| 🧠 **Multi-Dimensional Scoring** | `powerScore` (reach), `suspicionScore` (behavior), and `reputationScore` (trust) |
+| 🛡️ **Safe Recommendations** | Suggests trusted alternatives (e.g., uBlock Origin) when scanning malicious tools |
+| 📦 **Deep Source Analysis** | Downloads CRX packages directly from Google to analyze actual source code |
+| 🌍 **Online Architecture** | Designed as a central backend service accessible via API for companion extensions |
 | 📄 **Rich Reports** | CSV for inventory, JSON for automation, HTML/PDF for shareable review |
 
 ---
@@ -106,7 +98,8 @@ It now works like a real local audit system instead of a one-file prototype:
 
 ```
 POWER SCORE        → "How much browser/data access does this extension have?"
-SUSPICION SCORE    → "How much does its code/package behave like a malicious extension?"
+REPUTATION SCORE   → "How trusted is this publisher in the Chrome Web Store?"
+SUSPICION SCORE    → "Does the code contain indicators of compromise? (Adjusted by Reputation)"
 VERDICT            → "What should the user actually think about it?"
 ```
 
@@ -119,72 +112,62 @@ VERDICT            → "What should the user actually think about it?"
 [04] Heavy obfuscation / eval / Function usage
 [05] Broad host access + cookie/session-sensitive perms
 [06] Purpose-permission mismatch
+[07] Potential cryptocurrency mining
+[08] Clipboard tampering / Credential harvesting
 ```
 
 ### Intelligence Inputs
 
 ```
-LOCAL ANALYSIS            [PRIMARY]
-CHROME WEB STORE STATUS   [OPTIONAL]
-CURATED THREAT REGISTRY   [OPTIONAL]
-AI EXPLANATION LAYER      [OPTIONAL, NON-AUTHORITATIVE]
+DEEP SOURCE CODE ANALYSIS [PRIMARY]
+CHROME WEB STORE REPUTATION [PRIMARY]
+CURATED ALLOWLIST / REGISTRY [PRIMARY]
+AI EXPLANATION LAYER [OPTIONAL, NON-AUTHORITATIVE]
 ```
 
 ---
 
 ## `> cat architecture.md`
 
-```
-                  ┌──────────────────────────────────────────┐
-                  │              M A N I F E S T G U A R D   │
-                  └──────────────────────┬───────────────────┘
-                                         │
-                  ┌──────────────────────▼───────────────────┐
-                  │              FASTAPI BACKEND             │
-                  │  scan api │ import api │ report api      │
-                  └──────────────────────┬───────────────────┘
-                                         │
-          ┌──────────────────────────────┼──────────────────────────────┐
-          ▼                              ▼                              ▼
- ┌──────────────────┐         ┌──────────────────┐          ┌──────────────────┐
- │ PROFILE SCANNER  │         │ STORE ENRICHMENT │          │ INTEL MATCHER    │
- │ manifest parsing │         │ listed / removed │          │ known bad IDs    │
- └────────┬─────────┘         └────────┬─────────┘          └────────┬─────────┘
-          └────────────────────────────┼─────────────────────────────┘
-                                       ▼
-                          ┌──────────────────────────┐
-                          │ CLASSIFICATION ENGINE    │
-                          │ power + suspicion +      │
-                          │ deterministic verdict    │
-                          └────────────┬─────────────┘
-                                       ▼
-                          ┌──────────────────────────┐
-                          │ REACT + TYPESCRIPT UI    │
-                          │ controls │ queue │ detail│
-                          └──────────────────────────┘
+```mermaid
+graph TD
+    UI[Frontend Dashboard<br/>React/Vite] --> API[FastAPI Backend]
+    Companion[Companion Extension<br/>(Future)] --> API
+    
+    subgraph "Backend Engine"
+        API --> Scanner[Core Scanner Engine]
+        API --> CRX[CRX Downloader/Extractor]
+        
+        CRX --> CWS[Chrome Web Store]
+        
+        Scanner --> Rep[Reputation Engine]
+        Scanner --> Recs[Recommendation Engine]
+        Scanner --> Intel[Threat Intel]
+        Scanner --> AI[AI Summarizer]
+        
+        Rep --> CWS
+        Recs --> Allowlist[(205+ Trusted Allowlist)]
+    end
+    
+    Scanner --> DB[(Local JSON DB / Reports)]
 ```
 
-### Project Layout
+### Data & API Layer
+- **`api.py`**: Defines the REST routes. The most critical route is `/api/scans/online`, which accepts an extension payload and triggers the cloud analysis pipeline.
+- **`models.py`**: Strict Pydantic data validation for all inputs and outputs.
+- **`service.py`**: Handles state persistence, saving scan results so they survive server restarts.
 
-```text
-backend/
-  api.py
-  main.py
-  serve.py
-  scanner.py
-  service.py
-  reports.py
-  ai.py
-  intel.py
-  store.py
-frontend/
-  src/
-tests/
-app.py
-start-backend.ps1
-start-frontend.ps1
-start-dev.ps1
-```
+### Analysis & Classification Engine
+- **`crx_analyzer.py`**: A highly sophisticated module that bypasses the need for local filesystem access. It constructs Google API URLs to download `.crx` files directly, strips CRX2/CRX3 protobuf headers, and extracts the raw ZIP payload into memory for static analysis.
+- **`scanner.py`**: The core classification engine. It calculates two distinct metrics: **Power Score** (reach/permissions) and **Suspicion Score** (dangerous code indicators). It then factors in the Reputation Score to assign a final, deterministic verdict.
+
+### Enrichment Modules
+- **`reputation.py`**: Scrapes the Chrome Web Store to gather user counts, ratings, and developer badges, translating these into a `0-100` Reputation Score. This dynamically adjusts the suspicion score (suppressing false positives for trusted tools).
+- **`recommendations.py` & `allowlist.py`**: Infers the category of a scanned extension and cross-references a curated dataset of **205+ verified extensions** to propose safe alternatives.
+- **`ai.py`**: An optional LLM integration (Groq/OpenAI) that translates raw security data into a conversational executive summary.
+
+### Reporting
+- **`reports.py`**: Generates JSON, CSV, HTML, and features a custom `_PdfWriter` to export styled PDF reports without relying on heavy external dependencies.
 
 ---
 
@@ -194,16 +177,15 @@ start-dev.ps1
 
 ```
 [✓] Python 3.14+
-[✓] Node.js / npm.cmd
-[✓] Chrome / Chromium installed locally
-[✓] Optional AI key for summaries
+[✓] Node.js / npm
+[✓] Optional AI keys for summaries (Groq API supported)
 ```
 
-### Backend
+### Backend (Local / Render)
 
 ```bash
 pip install -r requirements.txt
-python app.py
+python backend/main.py
 ```
 
 ### Frontend
@@ -249,11 +231,12 @@ If your backend shell exits unexpectedly:
 ## `> curl /api/routes`
 
 ```text
-POST   /api/scans
+POST   /api/scans/online   (v3 Online scan trigger)
+POST   /api/scans          (Local filesystem scan)
 GET    /api/scans
 GET    /api/scans/{scanId}
 GET    /api/scans/{scanId}/extensions
-GET    /api/scans/{scanId}/extensions/{extensionId}
+GET    /api/scans/{scanId}/extensions/{extensionId}/recommendations
 GET    /api/scans/{scanId}/reports/{format}
 POST   /api/imports/csv
 GET    /api/health
@@ -267,7 +250,7 @@ GET    /api/health
 CSV   → flat extension inventory
 JSON  → full structured evidence export
 HTML  → shareable styled audit report
-PDF   → locally rendered printable summary
+PDF   → locally rendered printable summary (Zero-dependencies!)
 ```
 
 Stored scan artifacts live in:
@@ -305,9 +288,9 @@ Use AI for:
 ## `> cat notes.txt`
 
 ```diff
-+ Live Chrome Web Store checks are optional
-+ Scan history survives app restarts
-+ Known bad IDs can promote verdicts immediately
++ Online backend downloads source code independently (no filesystem access needed)
++ Reputation Engine suppresses false positives for trusted tools automatically
++ Safe Alternatives Engine guides users to better choices
 - "lookup_failed" does NOT mean removed
 - A powerful extension is NOT automatically malicious
 ```
@@ -319,14 +302,13 @@ Use AI for:
 ```text
 [x] Replace Streamlit prototype with FastAPI + React
 [x] Add profile-aware scanner
-[x] Resolve localized manifest strings
 [x] Add store-status enrichment
-[x] Add curated threat-intel registry
-[x] Add persistent scan history
 [x] Add HTML / PDF / JSON reporting
+[x] Add CRX extraction for online code analysis
+[x] Add Reputation Engine
+[x] Add Recommendation Engine + Allowlist
 [ ] Scan-to-scan comparison view
-[ ] One-click remediation actions
-[ ] Multi-browser support (Edge / Brave / Opera)
+[ ] One-click remediation actions via companion extension
 ```
 
 ---
@@ -354,11 +336,11 @@ Always review:
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                                                              │
-│  $ manifestguard --scan --profiles all --live-checks         │
+│  $ curl -X POST /api/scans/online                            │
 │                                                              │
-│  [✓] inventory loaded                                        │
-│  [✓] evidence classified                                     │
-│  [✓] reports ready                                           │
+│  [✓] CRX downloaded & extracted                              │
+│  [✓] Reputation scored                                       │
+│  [✓] Safe alternatives mapped                                │
 │                                                              │
 │  Your browser is only as safe as the extensions you keep.    │
 │                                                              │

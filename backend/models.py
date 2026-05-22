@@ -111,6 +111,12 @@ class ExtensionFinding:
     homepage_url: str | None = None
     author: str | None = None
     last_analyzed_at: str = field(default_factory=lambda: utcnow().isoformat())
+    # v3 fields
+    category: str | None = None
+    reputation_score: int = -1
+    reputation_details: dict[str, Any] | None = None
+    adjusted_suspicion_score: int = 0
+    recommendations: list[dict[str, Any]] = field(default_factory=list)
 
     def to_inventory_dict(self) -> dict[str, Any]:
         return {
@@ -129,6 +135,10 @@ class ExtensionFinding:
             "suspiciousSignals": [signal.to_dict() for signal in self.suspicious_signals],
             "intelMatches": [match.to_dict() for match in self.intel_matches],
             "aiSummary": self.ai_summary,
+            "category": self.category,
+            "reputationScore": self.reputation_score,
+            "adjustedSuspicionScore": self.adjusted_suspicion_score,
+            "recommendations": self.recommendations,
         }
 
     def to_detail_dict(self) -> dict[str, Any]:
@@ -145,6 +155,7 @@ class ExtensionFinding:
                 "homepageUrl": self.homepage_url,
                 "author": self.author,
                 "lastAnalyzedAt": self.last_analyzed_at,
+                "reputationDetails": self.reputation_details,
             }
         )
         return payload
@@ -179,6 +190,11 @@ class ExtensionFinding:
             homepage_url=payload.get("homepageUrl", payload.get("homepage_url")),
             author=payload.get("author"),
             last_analyzed_at=str(payload.get("lastAnalyzedAt", payload.get("last_analyzed_at", utcnow().isoformat()))),
+            category=payload.get("category"),
+            reputation_score=int(payload.get("reputationScore", payload.get("reputation_score", -1))),
+            reputation_details=payload.get("reputationDetails", payload.get("reputation_details")),
+            adjusted_suspicion_score=int(payload.get("adjustedSuspicionScore", payload.get("adjusted_suspicion_score", 0))),
+            recommendations=list(payload.get("recommendations", [])),
         )
 
     @property
@@ -244,9 +260,43 @@ class ScanRecord:
             "channelsScanned": sorted(channels),
         }
 
+
+    def _build_label(self) -> str:
+        """Generate a human-readable name for this scan."""
+        summary = self.summary()
+        parts: list[str] = []
+
+        # Browser channels
+        channels = summary.get("channelsScanned", [])
+        if channels:
+            channel_map = {
+                "stable": "Chrome", "beta": "Chrome Beta", "dev": "Chrome Dev",
+            }
+            names = []
+            for ch in channels[:2]:
+                names.append(channel_map.get(ch, ch.title()))
+            parts.append(" + ".join(names))
+        else:
+            parts.append(self.source.replace("_", " ").title())
+
+        # Profiles
+        profiles = summary.get("profilesScanned", [])
+        if profiles:
+            if len(profiles) == 1:
+                parts.append(profiles[0])
+            else:
+                parts.append(f"{len(profiles)} profiles")
+
+        # Extension count
+        count = summary["totalExtensions"]
+        parts.append(f"{count} extension{'s' if count != 1 else ''}")
+
+        return " \u00b7 ".join(parts)
+
     def to_summary_dict(self) -> dict[str, Any]:
         return {
             "scanId": self.scan_id,
+            "label": self._build_label(),
             "createdAt": self.created_at.isoformat(),
             "status": self.status,
             "source": self.source,
