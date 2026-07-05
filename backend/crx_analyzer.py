@@ -94,11 +94,13 @@ def _strip_crx_header(data: bytes) -> bytes:
         return data
 
 
-def download_crx(extension_id: str, timeout: float = 15.0, max_size: int = 50 * 1024 * 1024) -> bytes | None:
+def download_crx(extension_id: str, timeout: float = 15.0, max_size: int = 20 * 1024 * 1024) -> bytes | None:
     """Download a CRX file from Google's update servers.
 
     Returns the raw CRX bytes, or None if download fails.
-    max_size caps the download at 50MB to prevent memory exhaustion.
+    max_size caps the download at 20MB to prevent memory exhaustion — header
+    stripping copies the buffer, so a large CRX momentarily uses ~2x its size,
+    which can OOM-kill a constrained worker (e.g. Render free tier, 512MB).
     """
     url = CRX_DOWNLOAD_URL.format(extension_id=extension_id)
     request = urllib.request.Request(url, headers={"User-Agent": _USER_AGENT})
