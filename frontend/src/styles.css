@@ -2228,3 +2228,234 @@ h1, h2, h3, h4, h5 {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
 }
 
+/* ----------------------------------------------------------------
+   View tabs (Inventory / Collusion Graph / Watchlist)
+   ---------------------------------------------------------------- */
+.view-tabs {
+  max-width: var(--max-w);
+  margin: 0 auto var(--s-4);
+  padding: 0 var(--s-8);
+  display: flex;
+  gap: var(--s-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.view-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  padding: var(--s-3) var(--s-4);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--t-base), border-color var(--t-base);
+  margin-bottom: -1px;
+}
+.view-tab:hover { color: var(--text-primary); }
+.view-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.panel-card {
+  max-width: var(--max-w);
+  margin: 0 auto var(--s-6);
+  padding: var(--s-6) var(--s-8);
+}
+
+/* ----------------------------------------------------------------
+   Collusion graph
+   ---------------------------------------------------------------- */
+.collusion-graph__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  margin-bottom: var(--s-4);
+}
+.collusion-graph__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--s-1);
+}
+.collusion-graph__subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 52ch;
+  line-height: 1.55;
+}
+.collusion-graph__legend {
+  display: flex;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.collusion-graph__legend-item { display: flex; align-items: center; gap: var(--s-2); }
+.collusion-graph__legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.collusion-graph__canvas {
+  width: 100%;
+  height: auto;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  cursor: grab;
+  touch-action: none;
+}
+.collusion-graph__canvas:active { cursor: grabbing; }
+.collusion-graph__node-label {
+  font-size: 11px;
+  font-family: var(--font-ui);
+  fill: var(--text-primary);
+  pointer-events: none;
+  user-select: none;
+}
+.collusion-graph__empty {
+  text-align: center;
+  padding: var(--s-12) var(--s-4);
+  color: var(--text-secondary);
+}
+.collusion-graph__empty-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--s-2);
+}
+
+/* ----------------------------------------------------------------
+   Watchlist
+   ---------------------------------------------------------------- */
+.watchlist__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  margin-bottom: var(--s-4);
+}
+.watchlist__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--s-1);
+}
+.watchlist__subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 52ch;
+  line-height: 1.55;
+}
+.watchlist__add { display: flex; gap: var(--s-2); flex-wrap: wrap; }
+.watchlist__input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  padding: var(--s-2) var(--s-3);
+  font-size: 13px;
+  min-width: 280px;
+}
+.watchlist__input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-focus);
+}
+.watchlist__list { display: flex; flex-direction: column; gap: var(--s-3); }
+.watchlist__item {
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--s-4);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+}
+.watchlist__item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+}
+.watchlist__name { font-weight: 600; color: var(--text-primary); }
+.watchlist__meta { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+.watchlist__actions { display: flex; gap: var(--s-2); }
+.watchlist__alerts {
+  margin-top: var(--s-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.watchlist__alert {
+  display: flex;
+  gap: var(--s-2);
+  align-items: baseline;
+  font-size: 12.5px;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+}
+.watchlist__alert--high { border-left: 3px solid var(--danger); }
+.watchlist__alert--medium { border-left: 3px solid var(--warn); }
+.watchlist__alert--info,
+.watchlist__alert--low { border-left: 3px solid var(--accent); }
+.watchlist__alert-time {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.watchlist__empty {
+  text-align: center;
+  padding: var(--s-10) var(--s-4);
+  color: var(--text-secondary);
+}
+
+/* Button utilities used by watchlist */
+.btn-primary {
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all var(--t-base);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  transform: translateY(-1px);
+}
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-ghost {
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-sm);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: all var(--t-base);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-sunken);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+.btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+

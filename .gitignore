@@ -37,6 +37,9 @@ backend/data/
 frontend/node_modules/
 frontend/dist/
 tests/.tmp/
+tests/test_results.json
+*.db
+*.sqlite3
 
 # IDE
 .vscode/

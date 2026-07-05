@@ -846,9 +846,9 @@ class ScanService:
                 "at": now,
             })
 
-        # Verdict escalation
-        order = ["safe", "low_risk", "moderate_risk", "suspicious", "known_malicious"]
-        prev_verdict = prev.get("lastVerdict") or "safe"
+        # Verdict escalation (least -> most severe)
+        order = ["trusted", "low_concern", "moderate_risk", "suspicious", "known_malicious"]
+        prev_verdict = prev.get("lastVerdict") or "low_concern"
         try:
             if order.index(finding.verdict) > order.index(prev_verdict):
                 alerts.append({
