@@ -33,19 +33,47 @@
 
 Most extension scanners stop at **permissions**. That creates noise — security tools, password managers, and developer extensions often need broad access to do legitimate work.
 
-**ManifestGuard v4** goes deeper with multi-layered extension security analysis — separating legitimate power from actual malice using deep behavioral analysis, CRX source-code inspection, publisher reputation scoring, threat intelligence, and AI-powered summaries.
+**ManifestGuard** goes deeper with multi-layered extension security analysis — separating legitimate *reach* from actual *malice* using deep behavioral analysis, CRX source-code inspection, publisher reputation scoring, cross-extension collusion detection, repackaged-clone detection, threat intelligence, and AI-powered summaries.
+
+It ships as a complete, end-to-end platform: a **companion Chrome extension** enumerates your installed extensions and sends their metadata to a **FastAPI analysis backend**, which downloads and statically analyzes each extension's real source code, then presents an evidence-driven **React dashboard** — including an interactive collusion graph and a continuous-monitoring watchlist.
 
 ```diff
++ One-click companion extension ("an extension that audits your extensions")
 + Deep CRX source-code analysis (downloads & extracts extension packages)
++ Cross-extension collusion detection (shared C2 + externally_connectable)
++ Repackaged-clone detection (SimHash near-duplicate matching)
++ Continuous monitoring watchlist (alerts on behavioral drift between versions)
 + CWS Reputation Engine (0-100 scores based on users, ratings, badges)
 + Threat Intelligence (VirusTotal, AlienVault OTX, URLScan integration)
 + AI Security Summaries (BYOK: 13+ providers supported)
-+ Tiered Verdicts with configurable sensitivity
-+ Safe Alternative Recommendations (200+ curated allowlist)
-+ Interactive AI Chat ("Interrogate" any extension)
++ Measured detection accuracy against a labeled dataset (see below)
 - "all high permissions = malware"
 - noisy false positives on popular trusted tools
 ```
+
+---
+
+## Detection Accuracy
+
+These numbers come from `evaluation/run_evaluation.py` running the **full live pipeline** (real CRX downloads + static analysis) against a labeled dataset of known-malicious and popular-safe extension IDs. Re-run it yourself with `python -m evaluation.run_evaluation --live --write-readme`.
+
+<!-- METRICS:START -->
+### Detection Accuracy — live evaluation
+
+Evaluated on **23 / 63** labeled extensions (rest were delisted/unreachable at run time).
+
+| Metric | Score |
+|:-------|:------|
+| Precision | **70.0%** |
+| Recall (detection rate) | **100.0%** |
+| F1 score | **82.4%** |
+| Accuracy | **87.0%** |
+| False-positive rate | **18.8%** |
+
+Confusion matrix (positive = malicious): TP=7, FP=3, TN=13, FN=0.
+<!-- METRICS:END -->
+
+> Note: many known-malicious IDs have been removed from the Chrome Web Store, so a live run only scores the subset that still resolves. **Recall of 100%** means every reachable malicious sample was caught; the false positives are aggressive-permission "safe" extensions — an honest illustration of the precision/recall tradeoff the verdict ladder is tuned around.
 
 ---
 
@@ -68,7 +96,8 @@ Most extension scanners stop at **permissions**. That creates noise — security
 
 ```mermaid
 graph TD
-    UI["Frontend Dashboard<br/>React + Vite + TypeScript"] --> API["FastAPI Backend<br/>v4.0.0"]
+    Ext["Companion Chrome Extension<br/>chrome.management enumeration"] --> API
+    UI["Frontend Dashboard<br/>React + Vite + TypeScript"] --> API["FastAPI Backend"]
 
     subgraph "Analysis Pipeline"
         API --> Scanner["Core Scanner Engine"]
@@ -77,29 +106,34 @@ graph TD
         CRX --> CWS["Chrome Web Store"]
 
         Scanner --> Rep["Reputation Engine"]
-        Scanner --> Recs["Recommendation Engine"]
+        Scanner --> Collusion["Collusion Graph"]
+        Scanner --> Clone["Clone Detection<br/>(SimHash)"]
         Scanner --> Intel["Threat Intelligence"]
         Scanner --> AI["AI Summarizer"]
 
         Rep --> CWS
-        Recs --> Allowlist["(205+ Trusted Allowlist)"]
         Intel --> VT["VirusTotal"]
         Intel --> OTX["AlienVault OTX"]
         Intel --> URL["URLScan.io"]
     end
 
     AI --> Providers["13+ AI Providers<br/>(BYOK)"]
-    Scanner --> DB["Local JSON Store"]
+    Scanner --> DB["SQLite Store<br/>scans · fingerprints · watchlist"]
+    API --> Watch["Watchlist Monitor<br/>behavioral drift alerts"]
+    Watch --> DB
 ```
 
 ### Backend Modules
 
 | Module | Purpose |
 |:-------|:--------|
-| `api.py` | REST routes — scans, extensions, chat, reports, AI settings |
-| `service.py` | Scan orchestration, state persistence, thread-safe scan registry |
-| `scanner.py` | Core classification — power score, suspicion score, verdict assignment |
+| `api.py` | REST routes — scans, extensions, chat, reports, watchlist, stats, AI settings |
+| `service.py` | Scan orchestration, watchlist monitoring, thread-safe scan registry |
+| `database.py` | SQLite persistence — scans, code fingerprints, watchlist + baselines; legacy JSON migration |
+| `scanner.py` | Core classification — reach score, anomaly score, verdict assignment |
 | `crx_analyzer.py` | CRX download, protobuf header stripping, in-memory ZIP extraction |
+| `similarity.py` | Repackaged-clone detection via SimHash over JS token shingles |
+| `collusion.py` | Cross-extension collusion graph (shared C2 + `externally_connectable`) |
 | `reputation.py` | CWS scraping → user counts, ratings, badges → 0-100 reputation score |
 | `recommendations.py` | Category inference + safe alternative matching |
 | `allowlist.py` | 205+ curated trusted extensions database |
@@ -206,6 +240,43 @@ Web UI   → http://127.0.0.1:5173
 
 ---
 
+## Companion Chrome Extension
+
+The `extension/` directory contains a Manifest V3 companion extension that closes the loop — *an extension that audits your extensions*.
+
+1. Click the toolbar icon → **Audit my extensions**
+2. It enumerates installed extensions via the `chrome.management` API (no code injection, read-only)
+3. It POSTs their metadata to `/api/scans/online`
+4. It opens the dashboard deep-linked to the fresh report (`?scan=<id>`)
+
+**Load it locally:** `chrome://extensions` → enable *Developer mode* → *Load unpacked* → select the `extension/` folder. Set your backend URL from the popup's settings. See `extension/README.md` for details.
+
+---
+
+## Continuous Monitoring (Watchlist)
+
+Extension supply-chain attacks usually arrive through an **update** to an already-trusted extension (e.g. the real "Great Suspender" incident). ManifestGuard's watchlist re-analyzes tracked extensions and raises alerts on behavioral drift:
+
+- New permissions requested between versions
+- New network domains contacted
+- Obfuscation newly introduced
+- Risk verdict escalation
+
+Baselines and alerts are persisted in SQLite so drift is detected across restarts.
+
+---
+
+## Use Cases
+
+| Audience | Use Case |
+|:---------|:---------|
+| **Enterprise IT / SOC** | Audit employee browser extension fleets for risk and policy violations |
+| **Individuals** | Vet an extension before installing it, or clean up an existing browser |
+| **Security researchers** | Triage extension malware campaigns; detect clones and collusion clusters |
+| **Extension developers** | Pre-publish self-audit to understand how a scanner perceives your code |
+
+---
+
 ## API Routes
 
 ```
@@ -220,6 +291,12 @@ GET    /api/scans/{scanId}/extensions/{extId}               Extension detail
 POST   /api/scans/{scanId}/extensions/{extId}/chat          Chat with AI about extension
 GET    /api/scans/{scanId}/extensions/{extId}/recommendations  Safe alternatives
 GET    /api/scans/{scanId}/reports/{format}                 Export report (csv/json/html/pdf)
+GET    /api/watchlist                                       List watched extensions
+POST   /api/watchlist                                       Add extension to watchlist
+DELETE /api/watchlist/{extId}                               Remove from watchlist
+POST   /api/watchlist/{extId}/check                         Re-scan and diff for drift
+POST   /api/watchlist/check-all                             Re-scan every watched extension
+GET    /api/stats                                           Aggregate scan stats
 POST   /api/settings/ai/test                                Test AI provider connection
 GET    /api/settings/ai/providers                           List available AI providers
 ```

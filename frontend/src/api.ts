@@ -1,4 +1,4 @@
-import type { ExtensionFinding, Recommendation, ScanRecord } from "./types";
+import type { ExtensionFinding, Recommendation, ScanRecord, WatchEntry } from "./types";
 import { getAIHeaders } from "./components/AISettings";
 
 const API_BASE = import.meta.env.VITE_MANIFESTGUARD_API_URL ?? "http://127.0.0.1:8000/api";
@@ -87,6 +87,37 @@ export async function scanSingleExtension(extensionId: string, enableAi: boolean
     throw new Error(err.detail || 'Scan failed');
   }
   return res.json();
+}
+
+// ── Watchlist / continuous monitoring ──────────────────────
+
+export function listWatchlist(): Promise<WatchEntry[]> {
+  return request<WatchEntry[]>("/watchlist");
+}
+
+export function addToWatchlist(extensionId: string): Promise<{ status: string; name?: string }> {
+  return request("/watchlist", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAIHeaders() },
+    body: JSON.stringify({ extensionId }),
+  });
+}
+
+export function removeFromWatchlist(extensionId: string): Promise<{ status: string }> {
+  return request(`/watchlist/${extensionId}`, { method: "DELETE" });
+}
+
+export function checkWatchedExtension(extensionId: string): Promise<{
+  extensionId: string;
+  name: string;
+  version: string;
+  verdict: string;
+  newAlerts: Array<{ type: string; severity: string; message: string; at: string }>;
+}> {
+  return request(`/watchlist/${extensionId}/check`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAIHeaders() },
+  });
 }
 
 /** Extract extension ID from CWS URL or raw ID */

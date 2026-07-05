@@ -216,6 +216,8 @@ class ExtensionFinding:
     intent_classification: dict[str, Any] | None = None
     attack_simulation: str | None = None
     deobfuscated_payload: str | None = None
+    # v5 field: repackaged-clone detection matches
+    clone_matches: list[dict[str, Any]] = field(default_factory=list)
 
     def to_inventory_dict(self) -> dict[str, Any]:
         return {
@@ -245,6 +247,7 @@ class ExtensionFinding:
             "intentClassification": self.intent_classification,
             "attackSimulation": self.attack_simulation,
             "deobfuscatedPayload": self.deobfuscated_payload,
+            "cloneMatches": self.clone_matches,
         }
 
     def to_detail_dict(self) -> dict[str, Any]:
@@ -321,6 +324,7 @@ class ExtensionFinding:
             intent_classification=payload.get("intentClassification", payload.get("intent_classification")),
             attack_simulation=payload.get("attackSimulation", payload.get("attack_simulation")),
             deobfuscated_payload=payload.get("deobfuscatedPayload", payload.get("deobfuscated_payload")),
+            clone_matches=list(payload.get("cloneMatches", payload.get("clone_matches", []))),
         )
 
     @property

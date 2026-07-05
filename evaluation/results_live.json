@@ -1,0 +1,12 @@
+{
+  "samples": 23,
+  "truePositives": 7,
+  "falsePositives": 3,
+  "trueNegatives": 13,
+  "falseNegatives": 0,
+  "precision": 0.7,
+  "recall": 1.0,
+  "f1": 0.8235,
+  "accuracy": 0.8696,
+  "falsePositiveRate": 0.1875
+}

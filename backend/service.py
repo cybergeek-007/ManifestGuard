@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from backend.ai import maybe_enrich_with_ai
+from backend.database import database
 from backend.models import (
     ExtensionFinding,
     ProfileInstall,
@@ -41,23 +42,36 @@ class ScanService:
         self._load_existing_scans()
 
     def _load_existing_scans(self) -> None:
-        import re
-        _hex_dir = re.compile(r"^[a-f0-9]{12,32}$")
-        for report_file in sorted(self.data_dir.glob("*/*.json")):
-            # Skip non-scan directories (e.g. reputation_cache, intel_cache)
-            if not _hex_dir.match(report_file.parent.name):
-                continue
+        """Load scans from SQLite (migrating any legacy JSON reports first)."""
+        database.migrate_legacy_reports(self.data_dir)
+        for raw in database.load_all_scans():
             try:
-                raw = json.loads(report_file.read_text(encoding="utf-8"))
-                # Saved JSON may be nested: { "scan": {...}, "extensions": [...] }
+                # Stored JSON is nested: { "scan": {...}, "extensions": [...] }
                 if "scan" in raw:
                     payload = {**raw["scan"], "extensions": raw.get("extensions", [])}
                 else:
                     payload = raw
-                record = ScanRecord.from_dict(payload, report_file.parent)
+                scan_id = str(payload.get("scanId", payload.get("scan_id", "")))
+                record = ScanRecord.from_dict(payload, self.data_dir / scan_id)
             except Exception:
                 continue
             self._scans[record.scan_id] = record
+
+    def _persist_scan(self, record: ScanRecord) -> None:
+        """Write-through: register in memory and persist to SQLite."""
+        with self._lock:
+            self._scans[record.scan_id] = record
+        payload = {
+            "scan": record.to_summary_dict(),
+            "extensions": [finding.to_detail_dict() for finding in record.findings],
+        }
+        database.save_scan(
+            scan_id=record.scan_id,
+            created_at=record.created_at.isoformat(),
+            status=record.status,
+            source=record.source,
+            payload=payload,
+        )
 
     # ── Online scan (sole entry point) ────────────────────────
 
@@ -140,6 +154,7 @@ class ScanService:
             # 6. Deep source code analysis (always on in v4)
             signals = []
             timeline = []
+            clone_matches: list[dict] = []
             crx_manifest = None
             bg_snippet = ""
             max_obf_str = ""
@@ -189,6 +204,51 @@ class ScanService:
                         except Exception as e:
                             delta_result = None
                             log.debug("Delta cache error for %s: %s", ext_id, e)
+
+                        # Clone / repackaging detection
+                        try:
+                            from backend.similarity import (
+                                fingerprint_directory, find_clones,
+                            )
+                            fp = fingerprint_directory(
+                                crx_result.extract_dir, ext_id, version, name
+                            )
+                            if fp is not None:
+                                candidates = database.load_all_fingerprints(
+                                    exclude_extension_id=ext_id
+                                )
+                                clone_hits = find_clones(fp, candidates)
+                                if clone_hits:
+                                    clone_matches = [m.to_dict() for m in clone_hits]
+                                    top = clone_hits[0]
+                                    signals.append(SuspiciousSignal(
+                                        code="repackaged_clone",
+                                        title="Possible Repackaged Clone",
+                                        severity=20,
+                                        detail=(
+                                            "Code is a near-duplicate of another "
+                                            f"listing: {top.detail}. Repackaged clones "
+                                            "of popular extensions are a common malware "
+                                            "delivery vector."
+                                        ),
+                                        evidence=[m.detail for m in clone_hits[:3]],
+                                    ))
+                                    timeline.append(
+                                        f"Clone check: {top.detail}"
+                                    )
+                                # Record our own fingerprint for future comparisons
+                                rec = fp.to_record()
+                                database.save_fingerprint(
+                                    extension_id=rec["extension_id"],
+                                    version=rec["version"],
+                                    name=rec["name"],
+                                    simhash=rec["simhash"],
+                                    file_hashes=rec["file_hashes"],
+                                    js_file_count=rec["js_file_count"],
+                                    total_js_bytes=rec["total_js_bytes"],
+                                )
+                        except Exception as e:
+                            log.debug("Clone detection error for %s: %s", ext_id, e)
 
                         extraction_dirs.append(crx_result.extract_dir)
                     else:
@@ -330,6 +390,7 @@ class ScanService:
                 intent_classification=ai_results.get("intent"),
                 attack_simulation=ai_results.get("attack"),
                 deobfuscated_payload=ai_results.get("deobfuscated"),
+                clone_matches=clone_matches,
             )
             findings.append(finding)
 
@@ -363,8 +424,6 @@ class ScanService:
             )
         )
 
-        report_dir = self.data_dir / scan_id
-        report_dir.mkdir(parents=True, exist_ok=True)
         record = ScanRecord(
             scan_id=scan_id,
             created_at=datetime.now(timezone.utc),
@@ -372,11 +431,9 @@ class ScanService:
             source="online_scan",
             options=ScanOptions(enable_live_checks=True, enable_ai=enable_ai),
             findings=findings,
-            report_dir=report_dir,
+            report_dir=self.data_dir / scan_id,
         )
-        with self._lock:
-            self._scans[scan_id] = record
-        write_json_report(record, report_dir / f"{scan_id}.json")
+        self._persist_scan(record)
         return record
 
     # ── Local OS scan (Windows only) ──────────────────────────
@@ -590,8 +647,6 @@ class ScanService:
 
         # ── 4. Save and return ─────────────────────────────────
         scan_id = uuid.uuid4().hex  # Full 32 hex chars for enumeration resistance
-        report_dir = self.data_dir / scan_id
-        report_dir.mkdir(parents=True, exist_ok=True)
         record = ScanRecord(
             scan_id=scan_id,
             created_at=datetime.now(timezone.utc),
@@ -599,11 +654,9 @@ class ScanService:
             source="local_scan",
             options=ScanOptions(enable_live_checks=True, enable_ai=enable_ai),
             findings=findings,
-            report_dir=report_dir,
+            report_dir=self.data_dir / scan_id,
         )
-        with self._lock:
-            self._scans[scan_id] = record
-        write_json_report(record, report_dir / f"{scan_id}.json")
+        self._persist_scan(record)
         log.info("Local scan complete: %d extensions in scan %s", len(findings), scan_id)
         return record
 
@@ -673,6 +726,7 @@ class ScanService:
             return None
 
         format_name = format_name.lower()
+        scan.report_dir.mkdir(parents=True, exist_ok=True)
         destination = scan.report_dir / f"{scan_id}.{format_name}"
         if format_name == "csv":
             return write_csv_report(scan, destination)
@@ -683,6 +737,163 @@ class ScanService:
         if format_name == "pdf":
             return write_pdf_report(scan, destination)
         raise ValueError("Unsupported report format")
+
+    # ── Watchlist / continuous monitoring ─────────────────
+
+    def watchlist_add(self, extension_id: str) -> dict:
+        """Add an extension to the monitoring watchlist.
+
+        Runs an initial scan to capture a baseline (version, verdict,
+        permissions, contacted domains) so future re-checks can diff
+        against it.
+        """
+        finding = self._scan_single_finding(extension_id)
+        if finding is None:
+            return {"error": "Could not analyze extension for monitoring"}
+        database.watchlist_add(
+            extension_id=extension_id,
+            name=finding.name,
+            version=finding.version,
+            verdict=finding.verdict,
+        )
+        # Seed baseline state so the first re-check has something to diff.
+        self._save_watch_baseline(finding)
+        return {"status": "added", "extensionId": extension_id, "name": finding.name}
+
+    def watchlist_remove(self, extension_id: str) -> dict:
+        removed = database.watchlist_remove(extension_id)
+        return {"status": "removed" if removed else "not_found", "extensionId": extension_id}
+
+    def watchlist_all(self) -> list[dict]:
+        return database.watchlist_all()
+
+    def watchlist_check(self, extension_id: str) -> dict:
+        """Re-analyze a watched extension and record any behavioral drift."""
+        entries = {e["extensionId"]: e for e in database.watchlist_all()}
+        prev = entries.get(extension_id)
+        if prev is None:
+            return {"error": "Extension is not on the watchlist"}
+
+        finding = self._scan_single_finding(extension_id)
+        if finding is None:
+            return {"error": "Re-scan failed"}
+
+        alerts = self._diff_watch_state(prev, finding)
+        database.watchlist_update(
+            extension_id=extension_id,
+            version=finding.version,
+            verdict=finding.verdict,
+            new_alerts=alerts,
+        )
+        self._save_watch_baseline(finding)
+        return {
+            "extensionId": extension_id,
+            "name": finding.name,
+            "version": finding.version,
+            "verdict": finding.verdict,
+            "newAlerts": alerts,
+        }
+
+    def watchlist_check_all(self) -> list[dict]:
+        results = []
+        for entry in database.watchlist_all():
+            results.append(self.watchlist_check(entry["extensionId"]))
+        return results
+
+    def _scan_single_finding(self, extension_id: str) -> ExtensionFinding | None:
+        """Run the full online pipeline for one extension, return its finding."""
+        ext_data = {
+            "id": extension_id,
+            "name": "Unknown",
+            "version": "",
+            "description": "",
+            "permissions": [],
+            "hostPermissions": [],
+            "enabled": True,
+            "installType": "normal",
+        }
+        record = self.create_online_scan([ext_data], active_urls=[], enable_ai=False)
+        return record.findings[0] if record.findings else None
+
+    def _domains_of(self, finding: ExtensionFinding) -> set[str]:
+        return {d.domain for d in finding.domain_intel if getattr(d, "domain", None)}
+
+    def _save_watch_baseline(self, finding: ExtensionFinding) -> None:
+        """Persist the current permissions/domains snapshot for diffing."""
+        database.watchlist_set_baseline(
+            extension_id=finding.id,
+            permissions=sorted(set(finding.permissions) | set(finding.host_permissions)),
+            domains=sorted(self._domains_of(finding)),
+            has_obfuscation=any(
+                s.code in ("obfuscation", "heavy_obfuscation")
+                for s in finding.suspicious_signals
+            ),
+        )
+
+    def _diff_watch_state(self, prev: dict, finding: ExtensionFinding) -> list[dict]:
+        """Compare a re-scan to the stored baseline and emit alert dicts."""
+        alerts: list[dict] = []
+        now = datetime.now(timezone.utc).isoformat()
+        baseline = database.watchlist_get_baseline(finding.id)
+
+        # Version change
+        prev_version = prev.get("lastVersion")
+        if prev_version and finding.version and finding.version != prev_version:
+            alerts.append({
+                "type": "version_change",
+                "severity": "info",
+                "message": f"Updated from v{prev_version} to v{finding.version}",
+                "at": now,
+            })
+
+        # Verdict escalation (least -> most severe)
+        order = ["trusted", "low_concern", "moderate_risk", "suspicious", "known_malicious"]
+        prev_verdict = prev.get("lastVerdict") or "low_concern"
+        try:
+            if order.index(finding.verdict) > order.index(prev_verdict):
+                alerts.append({
+                    "type": "verdict_escalation",
+                    "severity": "high",
+                    "message": f"Risk verdict escalated: {prev_verdict} -> {finding.verdict}",
+                    "at": now,
+                })
+        except ValueError:
+            pass
+
+        if baseline:
+            # New permissions
+            new_perms = sorted(
+                (set(finding.permissions) | set(finding.host_permissions))
+                - set(baseline.get("permissions", []))
+            )
+            if new_perms:
+                alerts.append({
+                    "type": "new_permissions",
+                    "severity": "high",
+                    "message": "New permissions requested: " + ", ".join(new_perms[:6]),
+                    "at": now,
+                })
+            # New contacted domains
+            new_domains = sorted(self._domains_of(finding) - set(baseline.get("domains", [])))
+            if new_domains:
+                alerts.append({
+                    "type": "new_domains",
+                    "severity": "medium",
+                    "message": "New network domains contacted: " + ", ".join(new_domains[:6]),
+                    "at": now,
+                })
+            # Obfuscation appeared
+            if not baseline.get("has_obfuscation") and any(
+                s.code in ("obfuscation", "heavy_obfuscation")
+                for s in finding.suspicious_signals
+            ):
+                alerts.append({
+                    "type": "obfuscation_introduced",
+                    "severity": "high",
+                    "message": "Code obfuscation newly detected in this version",
+                    "at": now,
+                })
+        return alerts
 
 
 service = ScanService()
