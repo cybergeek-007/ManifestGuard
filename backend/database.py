@@ -88,6 +88,15 @@ class Database:
                         alerts_json TEXT NOT NULL DEFAULT '[]'
                     )
                 """)
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS watchlist_baseline (
+                        extension_id TEXT PRIMARY KEY,
+                        permissions_json TEXT NOT NULL DEFAULT '[]',
+                        domains_json TEXT NOT NULL DEFAULT '[]',
+                        has_obfuscation INTEGER NOT NULL DEFAULT 0,
+                        updated_at TEXT NOT NULL
+                    )
+                """)
                 conn.commit()
             finally:
                 conn.close()
@@ -335,6 +344,54 @@ class Database:
                 conn.commit()
             finally:
                 conn.close()
+
+    def watchlist_set_baseline(
+        self,
+        extension_id: str,
+        permissions: list[str],
+        domains: list[str],
+        has_obfuscation: bool,
+    ) -> None:
+        with self._lock:
+            conn = self._connect()
+            try:
+                conn.execute(
+                    """INSERT OR REPLACE INTO watchlist_baseline
+                       (extension_id, permissions_json, domains_json, has_obfuscation, updated_at)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (
+                        extension_id,
+                        json.dumps(permissions),
+                        json.dumps(domains),
+                        1 if has_obfuscation else 0,
+                        datetime.now(timezone.utc).isoformat(),
+                    ),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+    def watchlist_get_baseline(self, extension_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            conn = self._connect()
+            try:
+                row = conn.execute(
+                    """SELECT permissions_json, domains_json, has_obfuscation
+                       FROM watchlist_baseline WHERE extension_id = ?""",
+                    (extension_id,),
+                ).fetchone()
+            finally:
+                conn.close()
+        if not row:
+            return None
+        try:
+            return {
+                "permissions": json.loads(row[0]),
+                "domains": json.loads(row[1]),
+                "has_obfuscation": bool(row[2]),
+            }
+        except Exception:
+            return None
 
     # ── Legacy migration ───────────────────────────────────
 

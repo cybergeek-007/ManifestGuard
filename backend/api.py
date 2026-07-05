@@ -224,6 +224,65 @@ def get_report(scan_id: str, format_name: str) -> FileResponse:
     )
 
 
+# ── Watchlist / continuous monitoring ───────────────────────
+
+
+class WatchlistAddRequest(BaseModel):
+    extensionId: str
+
+    @field_validator("extensionId")
+    @classmethod
+    def validate_extension_id(cls, v: str) -> str:
+        if not _EXT_ID_RE.match(v):
+            raise ValueError("Invalid extension ID format: must be 32 lowercase a-p chars")
+        return v
+
+
+@router.get("/watchlist")
+def list_watchlist() -> list[dict]:
+    return service.watchlist_all()
+
+
+@router.post("/watchlist")
+def add_to_watchlist(req: WatchlistAddRequest) -> dict:
+    result = service.watchlist_add(req.extensionId)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.delete("/watchlist/{extension_id}")
+def remove_from_watchlist(extension_id: str) -> dict:
+    if not _EXT_ID_RE.match(extension_id):
+        raise HTTPException(status_code=400, detail="Invalid extension ID format")
+    return service.watchlist_remove(extension_id)
+
+
+@router.post("/watchlist/{extension_id}/check")
+def check_watched_extension(extension_id: str) -> dict:
+    if not _EXT_ID_RE.match(extension_id):
+        raise HTTPException(status_code=400, detail="Invalid extension ID format")
+    result = service.watchlist_check(extension_id)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.post("/watchlist/check-all")
+def check_all_watched() -> list[dict]:
+    return service.watchlist_check_all()
+
+
+# ── Public stats ────────────────────────────────────────────
+
+
+@router.get("/stats")
+def public_stats() -> dict:
+    """Aggregate stats for the landing/fleet overview (no PII)."""
+    from backend.database import database
+    return database.scan_stats()
+
+
 # ── AI provider settings ────────────────────────────────────
 
 
