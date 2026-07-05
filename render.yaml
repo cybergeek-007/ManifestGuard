@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: manifestguard-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m backend.serve --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: ALLOWED_ORIGINS
+        value: https://manifestguard.onrender.com,chrome-extension://nmlkkglnnkgigimofnhmbdnpmnimldif
+      - key: GROQ_API_KEY
+        sync: false
+      - key: VIRUSTOTAL_API_KEY
+        sync: false
+      - key: ALIENVAULT_OTX_KEY
+        sync: false
+      - key: URLSCAN_API_KEY
+        sync: false

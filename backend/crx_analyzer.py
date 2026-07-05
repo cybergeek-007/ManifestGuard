@@ -94,10 +94,11 @@ def _strip_crx_header(data: bytes) -> bytes:
         return data
 
 
-def download_crx(extension_id: str, timeout: float = 15.0) -> bytes | None:
+def download_crx(extension_id: str, timeout: float = 15.0, max_size: int = 50 * 1024 * 1024) -> bytes | None:
     """Download a CRX file from Google's update servers.
 
     Returns the raw CRX bytes, or None if download fails.
+    max_size caps the download at 50MB to prevent memory exhaustion.
     """
     url = CRX_DOWNLOAD_URL.format(extension_id=extension_id)
     request = urllib.request.Request(url, headers={"User-Agent": _USER_AGENT})
@@ -105,8 +106,10 @@ def download_crx(extension_id: str, timeout: float = 15.0) -> bytes | None:
 
     try:
         with urllib.request.urlopen(request, timeout=timeout, context=context) as resp:
-            # Follow redirects — urllib handles this automatically
-            return resp.read()
+            data = resp.read(max_size + 1)
+            if len(data) > max_size:
+                return None  # Too large
+            return data
     except urllib.error.HTTPError as exc:
         if exc.code in (404, 204):
             return None
@@ -122,16 +125,19 @@ def extract_crx(crx_data: bytes, dest_dir: Path) -> bool:
     Returns True if extraction succeeded.
     """
     zip_data = _strip_crx_header(crx_data)
+    dest_resolved = dest_dir.resolve()
 
     try:
         with zipfile.ZipFile(io.BytesIO(zip_data)) as zf:
-            # Security: skip files with absolute paths or path traversal
             for info in zf.infolist():
-                if info.filename.startswith("/") or ".." in info.filename:
+                # Skip very large files (> 1MB) to prevent abuse
+                if info.file_size > 1 * 1024 * 1024:
                     continue
-                # Skip very large files (> 5MB) to prevent abuse
-                if info.file_size > 5 * 1024 * 1024:
-                    continue
+                # Security: resolve the full output path and verify it stays
+                # within dest_dir.  Catches ../, ..\, symlinks, etc.
+                target = (dest_dir / info.filename).resolve()
+                if not str(target).startswith(str(dest_resolved)):
+                    continue  # path traversal attempt — skip
                 zf.extract(info, dest_dir)
         return True
     except (zipfile.BadZipFile, Exception):

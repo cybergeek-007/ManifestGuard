@@ -2,13 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000; img-src 'self' data:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ManifestGuard v3</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="description" content="ManifestGuard — Deep-security analysis for Chrome browser extensions. Detect malicious extensions, audit permissions, and get AI-powered risk assessments." />
+    <meta name="theme-color" content="#6366f1" />
+    <title>ManifestGuard — Browser Extension Security Scanner</title>
+
+    <!-- Favicon: simple shield SVG inline as data URI -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236366f1'/><path d='M16 6L7 10v7c0 5.25 3.85 10.15 9 11.35C21.15 27.15 25 22.25 25 17v-7L16 6z' fill='white'/></svg>" />
+
+    <!-- Prevent theme flash: set data-theme before React hydrates -->
+    <script>
+      try {
+        var t = localStorage.getItem('mg-theme') || 'light';
+        if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      } catch(e) {}
+    </script>
+
+    <!-- Fonts: Inter (body) + DM Sans (display) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <noscript>ManifestGuard requires JavaScript to run. Please enable JavaScript in your browser.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

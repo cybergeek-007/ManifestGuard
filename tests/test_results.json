@@ -1,0 +1,1972 @@
+[
+  {
+    "id": "pejdijmoenmkgeppbflobdenhhabjlaj",
+    "name": "Cyberhaven",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 14,
+    "anomaly_score": 50,
+    "reputation_score": 10,
+    "category": "security_tool",
+    "signals": [],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "mdaboflcmhejfihjcbmdiebgfchigjcf",
+    "name": "Blipshot",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 22,
+    "anomaly_score": 50,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "gaoflciahikhligngeccdecgfjngejlh",
+    "name": "Emoji Keyboard",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 10,
+    "anomaly_score": 50,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "biihmcacfjcankndbnogbbhkgimplicl",
+    "name": "Fake ChatGPT",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 100,
+    "anomaly_score": 75,
+    "reputation_score": 10,
+    "category": "communication",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "dknlfmjaanfblgfdfebhijalfmhmjjjo",
+    "name": "The Great Suspender",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 100,
+    "anomaly_score": 75,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "nfkknmgnmamgoddljhganmoadafmddme",
+    "name": "Hover Zoom+",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 100,
+    "anomaly_score": 75,
+    "reputation_score": 10,
+    "category": "communication",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "aaakfiobbojanlacpbeejjimehmpoffh",
+    "name": "Malicious Adware 1",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aacfibelemnkkbkelbhdbfhokeemfaho",
+    "name": "Malicious Search 2",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aaddmojoibcjdlghmeeeenlgenaogcif",
+    "name": "Malicious PDF 3",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aadmpgppfacognoeobmheghfiibdplcf",
+    "name": "Malicious Video 4",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": "media",
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aadnmeanpbokjjahcnikajejglihibpd",
+    "name": "Malicious Coupon 5",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "shopping",
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aaeohfpkhojgdhocdfpkdaffbehjbmmd",
+    "name": "Malicious Tracker 6",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "ad_blocker",
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aafibkjcplagpjkhkeamkpaellnglepe",
+    "name": "Malicious Shopping 7",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "shopping",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aahjpoblnboigndgjiijcnbahniepnbo",
+    "name": "Malicious Injector 8",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "ad_blocker",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aaiolimgbncdaldgbbjkidiijidchhjo",
+    "name": "Malicious Utility 9",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 90,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "accessibility",
+    "signals": [
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aajdkangkldmljmoaoehmbnchdjkgojk",
+    "name": "Malicious Crypto 10",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aapdalkmclfaahehnmicbglkohkldhne",
+    "name": "Malicious Search 11",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abbngaojehjekanfdipifimgmppiojpl",
+    "name": "Malicious Tool 12",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 90,
+    "anomaly_score": 22,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abclkepfnkmfkhohoogobbekdcdghaoi",
+    "name": "Malicious Downloader 13",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abekedpmkgndeflcidpkkddapnjnocjp",
+    "name": "Malicious Redirect 14",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abgbjkemnkollcpimnfnmoakjedaenfd",
+    "name": "Malicious Miner 15",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 90,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abgfholnofpihncfdmombecmohpkojdb",
+    "name": "Malicious Stealer 16",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": "media",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abghmipjfclfpgmmelbgolfgmhnigbma",
+    "name": "Malicious Adware 17",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abgpfcaflplbnjkpeoimjchehdhakped",
+    "name": "Malicious Spyware 18",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abigbbblmfhbgbjjdolageghdkdibeap",
+    "name": "Malicious Injector 19",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "privacy_tool",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abjbfhcehjndcpbiiagdnlfolkbfblpb",
+    "name": "Malicious Search 20",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "productivity",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abkebhncjihnoblbkcmhogfdpdmdklhg",
+    "name": "Malicious Miner 21",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 90,
+    "anomaly_score": 22,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abkolnpebgghiglkkdjcgjgbpnddmfmp",
+    "name": "Malicious Search 22",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 90,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abpcbpoghgmfjkkdoeknbldhkklpcmfn",
+    "name": "Malicious Adware 23",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "abpppenajdmdganodlmoeocldojbbjgp",
+    "name": "Malicious Video 24",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 90,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "media",
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "acaeafediijmccnjlokgcdiojiljfpbe",
+    "name": "Malicious Spyware 25",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 22,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "acbcnnccgmpbkoeblinmoadogmmgodoo",
+    "name": "Malicious Tracker 26",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "ad_blocker",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "acbiaofoeebeinacmcknopaikmecdehl",
+    "name": "Malicious Adware 27",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 90,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "acchdggcflgidjdcnhnnkfengdcmldae",
+    "name": "Malicious Search 28",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "acdfdofofabmipgcolilkfhnpoclgpdd",
+    "name": "Malicious Tool 29",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "acejnkocmhhdeepejldlchcpcokmomia",
+    "name": "Malicious Downloader 30",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "acfjniffcmahollkfpmbafogeknigieg",
+    "name": "Malicious Redirect 31",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "shopping",
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "achcinfieogfidhjekdbbmapmffifchl",
+    "name": "Malicious Crypto 32",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 25,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aciamgifeoagmcojlibbdhoabolgdopo",
+    "name": "Malicious Adware 33",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 90,
+    "anomaly_score": 22,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "acigamgkhbdgmhjgblcliidogdlnbfff",
+    "name": "Malicious Miner 34",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": "ad_blocker",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "aciipkgmbljbcokcnhjbjdhilpngemnj",
+    "name": "Malicious Spyware 35",
+    "expected": "known_malicious",
+    "actual": "moderate_risk",
+    "sub_verdict": "High Reach, Low Reputation",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": false
+  },
+  {
+    "id": "jeoacafpbcihiomhlakheieifhpjdfeo",
+    "name": "PDF Toolbox",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 10,
+    "anomaly_score": 50,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "lgjdgmdbfhobkdbcjnpnlmhnplnidkkp",
+    "name": "Autoskip for Youtube",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 100,
+    "anomaly_score": 75,
+    "reputation_score": 10,
+    "category": "media",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "mmnbenehknklpbendgmgngeaignppnbe",
+    "name": "Netflix Party",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 32,
+    "anomaly_score": 50,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "cbkfcfboeakknobhomlfkminbjnphahp",
+    "name": "SearchBlox",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 88,
+    "anomaly_score": 75,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "lcdlanlaneooailneapmjppndnahkfoe",
+    "name": "Fake IDM",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 100,
+    "anomaly_score": 75,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "okfndbbkfdgjfopknhfgjiaeemahgmea",
+    "name": "Fake VPN Pro",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 100,
+    "anomaly_score": 50,
+    "reputation_score": 10,
+    "category": "privacy_tool",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fgihkjmiinmojmncbkefoidlnkfhgkdh",
+    "name": "ChromeLoader",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 100,
+    "anomaly_score": 75,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "gfhnliecanfpnoihopjacflnlnbciekp",
+    "name": "Quick ChatGPT",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 100,
+    "anomaly_score": 75,
+    "reputation_score": 10,
+    "category": "communication",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "cmkjegemnfhbfkhcimmaocbahpoojfga",
+    "name": "CacheFlow",
+    "expected": "known_malicious",
+    "actual": "known_malicious",
+    "sub_verdict": "Threat Intel Match",
+    "reach_score": 100,
+    "anomaly_score": 75,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 1,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "nngceckbapebfimnlniiiahkandclblb",
+    "name": "Bitwarden",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "password_manager",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "aeblfdkhhhdcdjpifhhbdiojplfjncoa",
+    "name": "1Password",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "password_manager",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "hdokiejnpimakedhajhdlcegeplioahd",
+    "name": "LastPass",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "password_manager",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "fdjamakpfbbddfjaooikfcpapjhoafdg",
+    "name": "Dashlane",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "password_manager",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+    "name": "uBlock Origin",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "ad_blocker",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "gighmmpiobklfepjocnamgkkbiglidom",
+    "name": "AdBlock",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "ad_blocker",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "cfhdojbkjhnklbpkdaibdccddilifddb",
+    "name": "Adblock Plus",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "ad_blocker",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "gcbommkclmhbdajhhjcgnbmkbfnbfndb",
+    "name": "HTTPS Everywhere",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "High Reach, Verified",
+    "reach_score": 100,
+    "anomaly_score": 12,
+    "reputation_score": 75,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "pkehgijcmpdhfbdbbnkijodmdjhbjlgp",
+    "name": "Privacy Badger",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "ad_blocker",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "fmkadmapgofadopljbjfkapdkoienihi",
+    "name": "React Developer Tools",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "developer_tool",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "nhdogjmejiglipccpnnnanhbledajbpd",
+    "name": "Vue.js devtools",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "developer_tool",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "lmhkpmbekcpmknklioeibfkpmmfibljd",
+    "name": "Redux DevTools",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "developer_tool",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "aapbdbdomjkkjkaonfhkkikfgjllcleb",
+    "name": "Google Translate",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "productivity",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "ghbmnnjooekpmoecnnnilnnbdlolhkhi",
+    "name": "Google Docs Offline",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 4,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "gcknhkkoolaabfmlnjonogaaifnjlfnp",
+    "name": "Avast Online Security",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "security_tool",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "aohghmighlieiainnegkcijnfilokake",
+    "name": "Google Docs",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 16,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "blipmdconlkpinefehnmjammfjpmpbjk",
+    "name": "Lighthouse",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "iiimokmoleadkbbmdhcacnpjiamdgcnf",
+    "name": "ColorPick Eyedropper",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 10,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "mhjfbmdgcfjbbpaeojofohoefgiehjai",
+    "name": "Chrome PDF Viewer",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 2,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "edacconmaakjimmfgnblocblbcdcbhamo",
+    "name": "Session Buddy",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 14,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "eimadpbcbfnmbkopoojfekhnkhdbieeh",
+    "name": "Dark Reader",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "accessibility",
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "bpmcpldpdmajfigpchkicefoigmkfalc",
+    "name": "Coursera Companion",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 12,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "djflhoibgkdhkhhcedjiklpkjnoahfmg",
+    "name": "User-Agent Switcher",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "nkbihfbeogaeaoehlefnkodbefgpgknn",
+    "name": "MetaMask",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "High Reach, Verified",
+    "reach_score": 100,
+    "anomaly_score": 12,
+    "reputation_score": 75,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "bfnaelmomeimhlpmgjnjophhpkkoljpa",
+    "name": "Phantom",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "High Reach, Verified",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 75,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "jnldfnhljmnhhoelhjcnmgpghmdfkgaj",
+    "name": "Tab Wrangler",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 14,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "kbmfpngjjgdllneeigpgjifpgocmfgmb",
+    "name": "Reddit Enhancement Suite",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 17,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_emoji_001",
+    "name": "Cool Emoji Keyboard",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": "communication",
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_theme_001",
+    "name": "Dark Theme Pro",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_calc_001",
+    "name": "Simple Calculator",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_notes_001",
+    "name": "Quick Notes",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_video_001",
+    "name": "Video Downloader Pro",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": "media",
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_weather_001",
+    "name": "Weather Forecast",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_tab_001",
+    "name": "New Tab Wallpaper",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_color_001",
+    "name": "Color Picker Plus",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_screenshot_01",
+    "name": "Screenshot Master",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "fake_refresh_001",
+    "name": "Auto Refresh",
+    "expected": "suspicious",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 47,
+    "reputation_score": 10,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "padekgcemlokbadohgkifijomclgjgif",
+    "name": "Proxy SwitchyOmega",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "High Reach, Verified",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 75,
+    "category": "privacy_tool",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "minimal_001",
+    "name": "Simple Clock",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 2,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "minimal_002",
+    "name": "Word Counter",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 10,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "optional_001",
+    "name": "Link Previewer",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 12,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "dev_ext_001",
+    "name": "My Dev Extension",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 17,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "efaidnbmnnnibpcajpcglclefindmkaj",
+    "name": "Adobe Acrobat",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "bihmplhobchoageeokmgbdihknkjbknd",
+    "name": "NordVPN",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "privacy_tool",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "jgclmjjpmfnkgfcfldkpagbmhdalfenl",
+    "name": "Allow CORS",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 17,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "chhjbpecpncaggjpdakmflnfcopglcmi",
+    "name": "Honey",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "shopping",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "nckgahadagoaajjgafhacjanaoiihapd",
+    "name": "Google Hangouts",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "hmbjbjdpkobdjplfobhljndfdfdipjhg",
+    "name": "Zoom",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "High Reach, Verified",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 75,
+    "category": "communication",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "kbfnbcaeplbcioakkpcpgfkobkghlhen",
+    "name": "Grammarly",
+    "expected": "trusted",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "productivity",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "gpdjojdkbbmdfjfahjcgigfpmkopogic",
+    "name": "Pinterest Save Button",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 12,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "laookkfknpbbblfpciffpaejjkokdgca",
+    "name": "Momentum",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 12,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "oocalimimngaihdkbihfgmpkcpnmlaoa",
+    "name": "Teleparty",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 24,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "hlepfoohegkhhmjieoechaddaejaokhf",
+    "name": "Refined GitHub",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 24,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "ckkdlimhmcjmikdlpkmbgfkaikojcbjk",
+    "name": "Todoist",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 17,
+    "reputation_score": 50,
+    "category": "productivity",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "hgimnogjllphhhkhlmebbmlgjoejdpjl",
+    "name": "Web Paint",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 12,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "mgijmajocgfcbeboacabfgobmjgjcoja",
+    "name": "Google Dictionary",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 12,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "gfdkimpbcpahaombhbimeihdjnejgicl",
+    "name": "Awesome Screenshot",
+    "expected": "low_concern",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 32,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "ekhagklcjbdpajgpjgmbionohlpdbjgc",
+    "name": "Zotero Connector",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "dbepggeogbaibhgnhhndojpepiihcmeb",
+    "name": "Vimium",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "hfjbmagddngcpeloejdejnfgbamkjaeg",
+    "name": "Vimium C",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 17,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "chlffgpmiacpedhhbkiomidkjlcfhogd",
+    "name": "Pushbullet",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 17,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "iibninhmiggehlcdolcilmhacighjamp",
+    "name": "Mercury Reader",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 12,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "bhlhnicpbhignbdhedgjhgdocnmhomnp",
+    "name": "ColorZilla",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "egnjhciaieeiaalmkjjpjlbdaldmbolc",
+    "name": "Tab Suspender",
+    "expected": "low_concern",
+    "actual": "low_concern",
+    "sub_verdict": null,
+    "reach_score": 14,
+    "anomaly_score": 0,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "noondiphcddnnabmjcihcjfbhfklnnep",
+    "name": "PixelBlock",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 2,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": null,
+    "signals": [],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  },
+  {
+    "id": "nlmmgnhgdeffjkdckmikfpnddkbbfkkk",
+    "name": "Image Downloader",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 17,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "gcalenpjmijncebpfijmoaglllgpjagf",
+    "name": "Full Page Screen Capture",
+    "expected": "low_concern",
+    "actual": "moderate_risk",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 32,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo",
+      "purpose_permission_mismatch"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "kdfieneakcjfaiglcfcgkidlkmlijjnh",
+    "name": "Wikiwand",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": null,
+    "reach_score": 100,
+    "anomaly_score": 17,
+    "reputation_score": 50,
+    "category": null,
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": false,
+    "pass": true
+  },
+  {
+    "id": "bfbameneiokkgbdmiekhjnmfkcnldhhm",
+    "name": "Web Developer",
+    "expected": "low_concern",
+    "actual": "trusted",
+    "sub_verdict": "Allowlist",
+    "reach_score": 100,
+    "anomaly_score": 0,
+    "reputation_score": 85,
+    "category": "developer_tool",
+    "signals": [
+      "broad_host_cookie_combo"
+    ],
+    "intel_count": 0,
+    "is_trusted": true,
+    "pass": true
+  }
+]

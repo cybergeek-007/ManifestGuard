@@ -19,178 +19,171 @@
 
 <br>
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│  "Know which extensions are merely powerful, and which are   │
-│   actually suspicious."                                      │
-│                                                              │
-│  [ ANALYZING... ]  ████████████████████████████░░  93%        │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
-
-<br>
-
-![Python](https://img.shields.io/badge/python-3.14+-00ff41?style=for-the-badge&logo=python&logoColor=00ff41&labelColor=0d1117)
-![FastAPI](https://img.shields.io/badge/fastapi-v3_backend-00ff41?style=for-the-badge&logo=fastapi&logoColor=00ff41&labelColor=0d1117)
-![React](https://img.shields.io/badge/react-typescript_ui-00ff41?style=for-the-badge&logo=react&logoColor=00ff41&labelColor=0d1117)
-![Cloud Ready](https://img.shields.io/badge/deployment-render_ready-00ff41?style=for-the-badge&labelColor=0d1117)
-![Status](https://img.shields.io/badge/status-ACTIVE-00ff41?style=for-the-badge&labelColor=0d1117)
+![Python](https://img.shields.io/badge/python-3.10+-6366f1?style=for-the-badge&logo=python&logoColor=white&labelColor=0d1117)
+![FastAPI](https://img.shields.io/badge/fastapi-v4_backend-6366f1?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=0d1117)
+![React](https://img.shields.io/badge/react-typescript_ui-6366f1?style=for-the-badge&logo=react&logoColor=white&labelColor=0d1117)
+![Vite](https://img.shields.io/badge/vite-frontend-6366f1?style=for-the-badge&logo=vite&logoColor=white&labelColor=0d1117)
+![Status](https://img.shields.io/badge/status-ACTIVE-22c55e?style=for-the-badge&labelColor=0d1117)
 
 </div>
 
 ---
 
-```
-root@manifestguard:~# cat /etc/motd
-```
+## Overview
 
-## `> ./overview.sh`
+Most extension scanners stop at **permissions**. That creates noise — security tools, password managers, and developer extensions often need broad access to do legitimate work.
 
-Most extension scanners stop at **permissions**. That creates noise. Security tools, password managers, OSINT helpers, and developer extensions often need broad access to do legitimate work.
-
-**ManifestGuard v3** introduces a true multi-layered approach to extension security, separating legitimate power from actual malice using deep behavioral analysis, publisher reputation, and curated intelligence.
+**ManifestGuard v4** goes deeper with multi-layered extension security analysis — separating legitimate power from actual malice using deep behavioral analysis, CRX source-code inspection, publisher reputation scoring, threat intelligence, and AI-powered summaries.
 
 ```diff
-+ Online backend for deep source-code analysis (CRX extraction)
-+ CWS Reputation Engine (scoring extensions 0-100 based on users, ratings, badges)
-+ Safe Alternative Recommendations (powered by a 200+ curated allowlist)
-+ Tiered Verdicts (including the new `moderate_risk` bucket)
++ Deep CRX source-code analysis (downloads & extracts extension packages)
++ CWS Reputation Engine (0-100 scores based on users, ratings, badges)
++ Threat Intelligence (VirusTotal, AlienVault OTX, URLScan integration)
++ AI Security Summaries (BYOK: 13+ providers supported)
++ Tiered Verdicts with configurable sensitivity
++ Safe Alternative Recommendations (200+ curated allowlist)
++ Interactive AI Chat ("Interrogate" any extension)
 - "all high permissions = malware"
 - noisy false positives on popular trusted tools
 ```
 
-It now operates as a robust API service ready for cloud deployment (e.g., Render), integrating seamlessly with a companion extension.
-
 ---
 
-## `> cat features.log`
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  MODULE                  │ STATUS  │ DESCRIPTION                 │
-├──────────────────────────────────────────────────────────────────┤
-│  backend/scanner.py      │ [LIVE]  │ Core static code analyzer   │
-│  backend/crx_analyzer.py │ [NEW]   │ Online CRX downloader & ext │
-│  backend/reputation.py   │ [NEW]   │ CWS Reputation Scorer       │
-│  backend/recommendations.│ [NEW]   │ Safe Alternatives Engine    │
-│  backend/allowlist.py    │ [NEW]   │ 200+ Trusted Publishers     │
-│  backend/reports.py      │ [LIVE]  │ Zero-dependency PDF/HTML/CSV│
-│  frontend/src/App.tsx    │ [LIVE]  │ React audit dashboard       │
-└──────────────────────────────────────────────────────────────────┘
-```
+## Features
 
 | Feature | Detail |
 |:--------|:-------|
-| 🧭 **Tiered Verdicts** | `low_concern`, `powerful_but_expected`, `moderate_risk`, `suspicious`, `known_malicious`, `removed_or_unavailable`, `disabled_by_chrome`, `unknown` |
-| 🧠 **Multi-Dimensional Scoring** | `powerScore` (reach), `suspicionScore` (behavior), and `reputationScore` (trust) |
-| 🛡️ **Safe Recommendations** | Suggests trusted alternatives (e.g., uBlock Origin) when scanning malicious tools |
-| 📦 **Deep Source Analysis** | Downloads CRX packages directly from Google to analyze actual source code |
-| 🌍 **Online Architecture** | Designed as a central backend service accessible via API for companion extensions |
-| 📄 **Rich Reports** | CSV for inventory, JSON for automation, HTML/PDF for shareable review |
+| 🧭 **Tiered Verdicts** | `trusted`, `low_concern`, `moderate_risk`, `suspicious`, `known_malicious` |
+| 🧠 **Multi-Dimensional Scoring** | `powerScore` (reach), `suspicionScore` (behavior), `reputationScore` (trust) |
+| 📦 **Deep Source Analysis** | Downloads CRX packages from Google, strips protobuf headers, extracts & analyzes source code in memory |
+| 🌐 **Threat Intelligence** | Live domain scanning via VirusTotal, AlienVault OTX, and URLScan APIs |
+| 🤖 **AI Analysis** | Security summaries, risk explanations, and interactive chat with 13+ AI providers (BYOK) |
+| 🛡️ **Safe Recommendations** | Suggests trusted alternatives from a curated 200+ extension allowlist |
+| 📊 **Rich Reports** | Export as CSV, JSON, HTML, or zero-dependency PDF |
+| 🔒 **Security Hardened** | Input validation, SSRF protection, path traversal prevention, no hardcoded secrets |
 
 ---
 
-## `> cat detection.engine`
+## Architecture
+
+```mermaid
+graph TD
+    UI["Frontend Dashboard<br/>React + Vite + TypeScript"] --> API["FastAPI Backend<br/>v4.0.0"]
+
+    subgraph "Analysis Pipeline"
+        API --> Scanner["Core Scanner Engine"]
+        API --> CRX["CRX Downloader / Extractor"]
+
+        CRX --> CWS["Chrome Web Store"]
+
+        Scanner --> Rep["Reputation Engine"]
+        Scanner --> Recs["Recommendation Engine"]
+        Scanner --> Intel["Threat Intelligence"]
+        Scanner --> AI["AI Summarizer"]
+
+        Rep --> CWS
+        Recs --> Allowlist["(205+ Trusted Allowlist)"]
+        Intel --> VT["VirusTotal"]
+        Intel --> OTX["AlienVault OTX"]
+        Intel --> URL["URLScan.io"]
+    end
+
+    AI --> Providers["13+ AI Providers<br/>(BYOK)"]
+    Scanner --> DB["Local JSON Store"]
+```
+
+### Backend Modules
+
+| Module | Purpose |
+|:-------|:--------|
+| `api.py` | REST routes — scans, extensions, chat, reports, AI settings |
+| `service.py` | Scan orchestration, state persistence, thread-safe scan registry |
+| `scanner.py` | Core classification — power score, suspicion score, verdict assignment |
+| `crx_analyzer.py` | CRX download, protobuf header stripping, in-memory ZIP extraction |
+| `reputation.py` | CWS scraping → user counts, ratings, badges → 0-100 reputation score |
+| `recommendations.py` | Category inference + safe alternative matching |
+| `allowlist.py` | 205+ curated trusted extensions database |
+| `ai.py` | Multi-provider AI client (13+ providers), summaries, chat, connection testing |
+| `intel.py` | Threat intelligence aggregation (VT, OTX, URLScan) |
+| `reports.py` | Zero-dependency PDF, HTML, CSV, JSON report generation |
+| `models.py` | Strict dataclass validation for all inputs/outputs |
+
+---
+
+## AI Provider Support (BYOK)
+
+ManifestGuard supports **Bring Your Own API Key** with 13+ providers. Keys are stored client-side only (localStorage) and sent as request headers — never persisted on the server.
+
+| Provider | Free Tier | Default Model |
+|----------|:---------:|---------------|
+| ⚡ Groq | ✅ | llama-3.3-70b-versatile |
+| 💎 Google Gemini | ✅ | gemini-2.0-flash |
+| 🤗 Hugging Face | ✅ | Llama-3.3-70B-Instruct |
+| 🧠 Cerebras | ✅ | llama-3.3-70b |
+| 🚀 SambaNova | ✅ | Meta-Llama-3.3-70B-Instruct |
+| ☁️ Cloudflare Workers AI | ✅ | @cf/meta/llama-3.3-70b-instruct-fp8-fast |
+| 🤖 OpenAI | ❌ | gpt-4o-mini |
+| 🔀 OpenRouter | ❌ | llama-3.3-70b-instruct |
+| 🤝 Together AI | ❌ | Llama-3.3-70B-Instruct-Turbo |
+| 🌊 Mistral AI | ❌ | mistral-large-latest |
+| 🔍 DeepSeek | ❌ | deepseek-chat |
+| 𝕏 xAI (Grok) | ❌ | grok-3-mini-fast |
+| 🔧 Custom | — | Any OpenAI-compatible endpoint |
+
+---
+
+## Detection Engine
 
 ### Classification Strategy
 
 ```
 POWER SCORE        → "How much browser/data access does this extension have?"
 REPUTATION SCORE   → "How trusted is this publisher in the Chrome Web Store?"
-SUSPICION SCORE    → "Does the code contain indicators of compromise? (Adjusted by Reputation)"
-VERDICT            → "What should the user actually think about it?"
+SUSPICION SCORE    → "Does the code contain indicators of compromise?" (adjusted by reputation)
+THREAT INTEL       → "Do any contacted domains appear in threat databases?"
+AI ANALYSIS        → "What does an LLM think about the combined evidence?"
+VERDICT            → Final deterministic classification
 ```
 
-### Suspicious Signals Checked
+### Suspicious Signals
 
 ```
 [01] Remote config / heartbeat fetching
 [02] Remote script injection into page context
 [03] CSP or header tampering patterns
 [04] Heavy obfuscation / eval / Function usage
-[05] Broad host access + cookie/session-sensitive perms
+[05] Broad host access + cookie/session-sensitive permissions
 [06] Purpose-permission mismatch
 [07] Potential cryptocurrency mining
-[08] Clipboard tampering / Credential harvesting
-```
-
-### Intelligence Inputs
-
-```
-DEEP SOURCE CODE ANALYSIS [PRIMARY]
-CHROME WEB STORE REPUTATION [PRIMARY]
-CURATED ALLOWLIST / REGISTRY [PRIMARY]
-AI EXPLANATION LAYER [OPTIONAL, NON-AUTHORITATIVE]
+[08] Clipboard tampering / credential harvesting
+[09] Screen capture / keylogging capabilities
+[10] Collusion patterns between extensions
 ```
 
 ---
 
-## `> cat architecture.md`
-
-```mermaid
-graph TD
-    UI[Frontend Dashboard<br/>React/Vite] --> API[FastAPI Backend]
-    Companion[Companion Extension<br/>(Future)] --> API
-    
-    subgraph "Backend Engine"
-        API --> Scanner[Core Scanner Engine]
-        API --> CRX[CRX Downloader/Extractor]
-        
-        CRX --> CWS[Chrome Web Store]
-        
-        Scanner --> Rep[Reputation Engine]
-        Scanner --> Recs[Recommendation Engine]
-        Scanner --> Intel[Threat Intel]
-        Scanner --> AI[AI Summarizer]
-        
-        Rep --> CWS
-        Recs --> Allowlist[(205+ Trusted Allowlist)]
-    end
-    
-    Scanner --> DB[(Local JSON DB / Reports)]
-```
-
-### Data & API Layer
-- **`api.py`**: Defines the REST routes. The most critical route is `/api/scans/online`, which accepts an extension payload and triggers the cloud analysis pipeline.
-- **`models.py`**: Strict Pydantic data validation for all inputs and outputs.
-- **`service.py`**: Handles state persistence, saving scan results so they survive server restarts.
-
-### Analysis & Classification Engine
-- **`crx_analyzer.py`**: A highly sophisticated module that bypasses the need for local filesystem access. It constructs Google API URLs to download `.crx` files directly, strips CRX2/CRX3 protobuf headers, and extracts the raw ZIP payload into memory for static analysis.
-- **`scanner.py`**: The core classification engine. It calculates two distinct metrics: **Power Score** (reach/permissions) and **Suspicion Score** (dangerous code indicators). It then factors in the Reputation Score to assign a final, deterministic verdict.
-
-### Enrichment Modules
-- **`reputation.py`**: Scrapes the Chrome Web Store to gather user counts, ratings, and developer badges, translating these into a `0-100` Reputation Score. This dynamically adjusts the suspicion score (suppressing false positives for trusted tools).
-- **`recommendations.py` & `allowlist.py`**: Infers the category of a scanned extension and cross-references a curated dataset of **205+ verified extensions** to propose safe alternatives.
-- **`ai.py`**: An optional LLM integration (Groq/OpenAI) that translates raw security data into a conversational executive summary.
-
-### Reporting
-- **`reports.py`**: Generates JSON, CSV, HTML, and features a custom `_PdfWriter` to export styled PDF reports without relying on heavy external dependencies.
-
----
-
-## `> ./install.sh`
+## Quick Start
 
 ### Requirements
 
-```
-[✓] Python 3.14+
-[✓] Node.js / npm
-[✓] Optional AI keys for summaries (Groq API supported)
-```
+- Python 3.10+
+- Node.js 18+ / npm
+- Optional: AI API key for summaries (6 free-tier providers available)
+- Optional: Threat intel API keys (VirusTotal, AlienVault OTX, URLScan)
 
-### Backend (Local / Render)
+### Setup
 
 ```bash
+# Clone
+git clone https://github.com/your-username/ManifestGuard.git
+cd ManifestGuard
+
+# Backend
 pip install -r requirements.txt
-python backend/main.py
-```
+cp backend/.env.example backend/.env   # Fill in your API keys
+python -m backend.serve
 
-### Frontend
-
-```bash
+# Frontend (new terminal)
 cd frontend
 npm install
 npm run dev
@@ -198,129 +191,97 @@ npm run dev
 
 ### Default Ports
 
-```text
+```
 API      → http://127.0.0.1:8000
-WEB UI   → http://127.0.0.1:5173
+Web UI   → http://127.0.0.1:5173
 ```
 
----
-
-## `> cat windows.shortcuts`
+### Windows Shortcuts
 
 ```powershell
-.\start-backend.ps1
-.\start-frontend.ps1
-```
-
-Detached startup:
-
-```powershell
-.\start-dev.ps1 -Detached
-```
-
-If your backend shell exits unexpectedly:
-
-```powershell
-.\start-backend.ps1 -Detached -WaitForHealth
-```
-
-> On this machine, `npm.cmd` is the reliable frontend launcher instead of bare `npm`.
-
----
-
-## `> curl /api/routes`
-
-```text
-POST   /api/scans/online   (v3 Online scan trigger)
-POST   /api/scans          (Local filesystem scan)
-GET    /api/scans
-GET    /api/scans/{scanId}
-GET    /api/scans/{scanId}/extensions
-GET    /api/scans/{scanId}/extensions/{extensionId}/recommendations
-GET    /api/scans/{scanId}/reports/{format}
-POST   /api/imports/csv
-GET    /api/health
+.\start-backend.ps1      # Start backend
+.\start-dev.ps1           # Start both backend + frontend
+.\start-dev.ps1 -Detached # Run in background
 ```
 
 ---
 
-## `> cat report.formats`
+## API Routes
 
 ```
-CSV   → flat extension inventory
-JSON  → full structured evidence export
-HTML  → shareable styled audit report
-PDF   → locally rendered printable summary (Zero-dependencies!)
-```
-
-Stored scan artifacts live in:
-
-```text
-backend/data/
-```
-
----
-
-## `> cat ai.conf`
-
-AI is optional and does **not** decide the final verdict.
-
-Supported environment variables:
-
-```text
-MANIFESTGUARD_AI_API_KEY
-MANIFESTGUARD_AI_BASE_URL
-MANIFESTGUARD_AI_MODEL
-groq_api_key
-```
-
-Use AI for:
-
-```
-[✓] plain-English explanations
-[✓] summarizing why an extension was flagged
-[✓] user-friendly remediation guidance
-[x] overriding deterministic classification
+GET    /api/health                                          Health check
+POST   /api/scans/online                                    Scan extensions (from companion)
+POST   /api/scans/single                                    Scan single extension by ID
+POST   /api/scans/local                                     Scan locally installed extensions
+GET    /api/scans                                           List all scans
+GET    /api/scans/{scanId}                                  Get scan detail
+GET    /api/scans/{scanId}/extensions                       List extensions in scan
+GET    /api/scans/{scanId}/extensions/{extId}               Extension detail
+POST   /api/scans/{scanId}/extensions/{extId}/chat          Chat with AI about extension
+GET    /api/scans/{scanId}/extensions/{extId}/recommendations  Safe alternatives
+GET    /api/scans/{scanId}/reports/{format}                 Export report (csv/json/html/pdf)
+POST   /api/settings/ai/test                                Test AI provider connection
+GET    /api/settings/ai/providers                           List available AI providers
 ```
 
 ---
 
-## `> cat notes.txt`
+## Report Formats
 
-```diff
-+ Online backend downloads source code independently (no filesystem access needed)
-+ Reputation Engine suppresses false positives for trusted tools automatically
-+ Safe Alternatives Engine guides users to better choices
-- "lookup_failed" does NOT mean removed
-- A powerful extension is NOT automatically malicious
+| Format | Description |
+|:-------|:------------|
+| CSV | Flat extension inventory spreadsheet |
+| JSON | Full structured evidence export |
+| HTML | Shareable styled audit report |
+| PDF | Zero-dependency printable summary |
+
+Reports are stored in `backend/data/{scanId}/`.
+
+---
+
+## Environment Variables
+
+```bash
+# AI Provider (choose one, or configure via UI)
+GROQ_API_KEY=                    # Groq (recommended — fast & free)
+OPENAI_API_KEY=                  # OpenAI
+MANIFESTGUARD_AI_API_KEY=        # Custom OpenAI-compatible endpoint
+MANIFESTGUARD_AI_BASE_URL=       # Custom endpoint URL
+MANIFESTGUARD_AI_MODEL=          # Custom model name
+
+# Threat Intelligence (all optional)
+VIRUSTOTAL_API_KEY=              # VirusTotal domain lookups
+ALIENVAULT_OTX_KEY=              # AlienVault OTX pulse checks
+URLSCAN_API_KEY=                 # URLScan.io submissions
+
+# Server
+ALLOWED_ORIGINS=http://localhost:5173,chrome-extension://your-id
 ```
 
 ---
 
-## `> cat roadmap.todo`
+## Security
 
-```text
-[x] Replace Streamlit prototype with FastAPI + React
-[x] Add profile-aware scanner
-[x] Add store-status enrichment
-[x] Add HTML / PDF / JSON reporting
-[x] Add CRX extraction for online code analysis
-[x] Add Reputation Engine
-[x] Add Recommendation Engine + Allowlist
-[ ] Scan-to-scan comparison view
-[ ] One-click remediation actions via companion extension
-```
+ManifestGuard has been hardened against common attack vectors:
+
+- **Input validation** on all user-controlled inputs (scan IDs, extension IDs, chat messages)
+- **SSRF protection** — URL allowlisting for CRX downloads (only `clients2.google.com`)
+- **Path traversal prevention** — Zip Slip protection during CRX extraction
+- **Thread-safe state** — Lock-based scan registry prevents race conditions
+- **No hardcoded secrets** — All keys via environment variables or client-side BYOK
+- **CORS restricted** — Only configured origins allowed
+- **AI keys never stored server-side** — BYOK keys are sent per-request via headers
 
 ---
 
-## `> cat DISCLAIMER.txt`
+## Disclaimer
 
 ```
 ManifestGuard is an audit and triage tool.
 
 It is designed to reduce false positives, not eliminate judgment.
-A verdict of "powerful_but_expected" means the extension has broad
-reach but currently lacks stronger malicious evidence.
+A verdict of "low_concern" means the extension has broad reach but
+currently lacks stronger malicious evidence.
 
 Always review:
   → source trust
@@ -333,18 +294,6 @@ Always review:
 
 <div align="center">
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│  $ curl -X POST /api/scans/online                            │
-│                                                              │
-│  [✓] CRX downloaded & extracted                              │
-│  [✓] Reputation scored                                       │
-│  [✓] Safe alternatives mapped                                │
-│                                                              │
-│  Your browser is only as safe as the extensions you keep.    │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
+**Your browser is only as safe as the extensions you keep.**
 
 </div>

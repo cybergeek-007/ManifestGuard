@@ -25,7 +25,11 @@ def bootstrap_python_path() -> Path:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the ManifestGuard API server.")
     parser.add_argument("--host", default=os.getenv("MANIFESTGUARD_HOST", "127.0.0.1"))
-    parser.add_argument("--port", type=int, default=int(os.getenv("MANIFESTGUARD_PORT", "8000")))
+    try:
+        default_port = int(os.getenv("PORT", os.getenv("MANIFESTGUARD_PORT", "8000")))
+    except ValueError:
+        default_port = 8000
+    parser.add_argument("--port", type=int, default=default_port)
     parser.add_argument("--reload", action="store_true", default=os.getenv("MANIFESTGUARD_RELOAD", "0") == "1")
     return parser.parse_args()
 

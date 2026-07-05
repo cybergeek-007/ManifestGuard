@@ -6,9 +6,11 @@ are cached in memory and to disk with a configurable TTL.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import ssl
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -16,10 +18,12 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-# ── Cache settings ───────────────────────────────────────────
+# ── Cache settings ───────────────────────────────────────────────────
 _CACHE_TTL_SECONDS = 24 * 60 * 60  # 24 hours
-_CACHE_DIR = Path("backend") / "data" / "reputation_cache"
-_MEMORY_CACHE: dict[str, tuple[float, ReputationResult]] = {}
+_MAX_MEMORY_CACHE = 500  # Evict oldest entries beyond this
+_CACHE_DIR = Path(__file__).resolve().parent / "data" / "reputation_cache"
+_MEMORY_CACHE: dict[str, tuple[float, "ReputationResult"]] = {}
+_CACHE_LOCK = threading.Lock()
 
 CWS_DETAIL_URL = "https://chromewebstore.google.com/detail/{extension_id}"
 
@@ -205,10 +209,10 @@ def _parse_last_updated(text: str) -> str:
 
 
 def _check_publisher_badges(text: str) -> tuple[bool, bool]:
-    """Check for Featured or Established Publisher badges."""
-    is_featured = bool(re.search(r'Featured', text, re.IGNORECASE))
+    # Use stricter matching to avoid false positives on words like "Features" or plain text
+    is_featured = bool(re.search(r'aria-label=[\'"]Featured[\'"]|>Featured<', text, re.IGNORECASE))
     is_established = bool(
-        re.search(r'Established Publisher|Verified Publisher', text, re.IGNORECASE)
+        re.search(r'aria-label=[\'"](?:Established|Verified) Publisher[\'"]|>(?:Established|Verified) Publisher<', text, re.IGNORECASE)
     )
     return is_featured, is_established
 
@@ -259,8 +263,10 @@ def _scrape_cws_page(extension_id: str, timeout: float = 6.0) -> ReputationResul
 
 
 def _cache_path(extension_id: str) -> Path:
+    # Hash the ID to prevent path traversal — never use raw user input in paths
+    safe_name = hashlib.sha256(extension_id.encode()).hexdigest()[:24]
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    return _CACHE_DIR / f"{extension_id}.json"
+    return _CACHE_DIR / f"{safe_name}.json"
 
 
 def _read_disk_cache(extension_id: str) -> ReputationResult | None:
@@ -296,23 +302,29 @@ def fetch_reputation(extension_id: str, use_cache: bool = True) -> ReputationRes
     Returns a ReputationResult with a 0-100 reputation_score.
     """
     # Check memory cache
-    if use_cache and extension_id in _MEMORY_CACHE:
-        cached_at, result = _MEMORY_CACHE[extension_id]
-        if time.time() - cached_at < _CACHE_TTL_SECONDS:
-            return result
+    with _CACHE_LOCK:
+        if use_cache and extension_id in _MEMORY_CACHE:
+            cached_at, result = _MEMORY_CACHE[extension_id]
+            if time.time() - cached_at < _CACHE_TTL_SECONDS:
+                return result
 
     # Check disk cache
     if use_cache:
         disk_result = _read_disk_cache(extension_id)
         if disk_result:
-            _MEMORY_CACHE[extension_id] = (time.time(), disk_result)
+            with _CACHE_LOCK:
+                _MEMORY_CACHE[extension_id] = (time.time(), disk_result)
             return disk_result
 
     # Scrape CWS
     result = _scrape_cws_page(extension_id)
 
     # Cache results (even failures, to avoid hammering CWS)
-    _MEMORY_CACHE[extension_id] = (time.time(), result)
+    with _CACHE_LOCK:
+        if len(_MEMORY_CACHE) >= _MAX_MEMORY_CACHE:
+            oldest_key = min(_MEMORY_CACHE, key=lambda k: _MEMORY_CACHE[k][0])
+            del _MEMORY_CACHE[oldest_key]
+        _MEMORY_CACHE[extension_id] = (time.time(), result)
     if result.lookup_status != "error":
         _write_disk_cache(result)
 
@@ -323,19 +335,17 @@ def compute_reputation_adjustment(reputation_score: int) -> float:
     """Compute the suspicion adjustment factor based on reputation.
 
     Returns a multiplier for the suspicion score:
-    - reputation >= 80 → multiply suspicion by 0.20 (huge reduction)
-    - reputation >= 60 → multiply suspicion by 0.45 (significant reduction)
-    - reputation >= 40 → multiply by 0.80 (slight reduction)
-    - reputation < 40  → multiply by 1.1-1.25 (amplify)
+    - We cap the reduction at 0.50 (50% reduction) to ensure supply-chain attacks 
+      on highly popular extensions are still caught if they exhibit anomalous behavior.
     """
     if reputation_score >= 80:
-        return 0.20
+        return 0.50
     if reputation_score >= 70:
-        return 0.30
+        return 0.60
     if reputation_score >= 60:
-        return 0.35
+        return 0.70
     if reputation_score >= 40:
-        return 0.80
+        return 0.85
     if reputation_score >= 20:
         return 1.10
     return 1.25

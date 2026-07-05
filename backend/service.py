@@ -1,72 +1,84 @@
+"""ManifestGuard v4 — Scan Service.
+
+Online-only scan orchestration. Local scan and CSV import removed.
+Deep scan is always on. Integrates collusion graph, intel burst, and delta cache.
+"""
 from __future__ import annotations
 
 import json
+import logging
+import os
+import threading
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from backend.ai import maybe_enrich_with_ai
-from backend.models import ExtensionFinding, ProfileInstall, ScanOptions, ScanRecord
+from backend.models import (
+    ExtensionFinding,
+    ProfileInstall,
+    ScanOptions,
+    ScanRecord,
+    SuspiciousSignal,
+)
 from backend.reports import (
     write_csv_report,
     write_html_report,
     write_json_report,
     write_pdf_report,
 )
-from backend.scanner import scan_local_extensions
+
+log = logging.getLogger(__name__)
 
 
 class ScanService:
     def __init__(self, data_dir: Path | None = None) -> None:
-        self.data_dir = data_dir or Path("backend") / "data"
+        self.data_dir = data_dir or Path(__file__).resolve().parent / "data"
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self._scans: dict[str, ScanRecord] = {}
+        self._lock = threading.Lock()
         self._load_existing_scans()
 
     def _load_existing_scans(self) -> None:
+        import re
+        _hex_dir = re.compile(r"^[a-f0-9]{12,32}$")
         for report_file in sorted(self.data_dir.glob("*/*.json")):
+            # Skip non-scan directories (e.g. reputation_cache, intel_cache)
+            if not _hex_dir.match(report_file.parent.name):
+                continue
             try:
-                payload = report_file.read_text(encoding="utf-8")
-                record = ScanRecord.from_dict(json.loads(payload), report_file.parent)
+                raw = json.loads(report_file.read_text(encoding="utf-8"))
+                # Saved JSON may be nested: { "scan": {...}, "extensions": [...] }
+                if "scan" in raw:
+                    payload = {**raw["scan"], "extensions": raw.get("extensions", [])}
+                else:
+                    payload = raw
+                record = ScanRecord.from_dict(payload, report_file.parent)
             except Exception:
                 continue
             self._scans[record.scan_id] = record
 
-    def create_scan(self, options: ScanOptions) -> ScanRecord:
-        scan_id = uuid.uuid4().hex[:12]
-        findings = scan_local_extensions(options)
-        maybe_enrich_with_ai(findings, options.enable_ai)
-        report_dir = self.data_dir / scan_id
-        report_dir.mkdir(parents=True, exist_ok=True)
-        record = ScanRecord(
-            scan_id=scan_id,
-            created_at=datetime.now(timezone.utc),
-            status="completed",
-            source="local_scan",
-            options=options,
-            findings=findings,
-            report_dir=report_dir,
-        )
-        self._scans[scan_id] = record
-        write_json_report(record, report_dir / f"{scan_id}.json")
-        return record
+    # ── Online scan (sole entry point) ────────────────────────
 
     def create_online_scan(
         self,
         extensions_data: list[dict[str, Any]],
+        active_urls: list[str] | None = None,
         enable_ai: bool = False,
-        enable_deep_scan: bool = False,
+        ai_config: dict[str, str] | None = None,
     ) -> ScanRecord:
         """Create a scan from companion extension metadata.
 
         For each extension:
-        1. Check allowlist → check threat intel → fetch reputation
-        2. If enable_deep_scan: download CRX from Google, extract, analyze source
-        3. Score using the retuned engine
-        4. Generate recommendations for flagged extensions
+        1. Check threat intel → check CWS status → fetch reputation
+        2. Download CRX from Google → extract → analyze source code (always on)
+        3. Run collusion analysis across all extensions
+        4. Run intel burst (VirusTotal/OTX/URLScan) on extracted domains
+        5. Check delta cache for supply-chain changes
+        6. Score using the v4 engine
+        7. Generate recommendations for flagged extensions
         """
-        from backend.allowlist import is_trusted
         from backend.crx_analyzer import cleanup_extraction, download_and_extract
         from backend.intel import lookup_intel
         from backend.recommendations import get_recommendations
@@ -74,14 +86,23 @@ class ScanService:
         from backend.scanner import (
             analyze_codebase,
             choose_verdict,
-            compute_power_score,
-            compute_suspicion_score,
+            compute_reach_score,
+            compute_anomaly_score,
             infer_category,
         )
         from backend.store import lookup_store_status
 
-        scan_id = uuid.uuid4().hex[:12]
+        scan_id = uuid.uuid4().hex  # Full 32 hex chars for enumeration resistance
         findings: list[ExtensionFinding] = []
+
+        # Collect manifests for collusion analysis
+        all_manifests: dict[str, dict] = {}
+        # Collect extracted JS content for intel burst
+        extension_js_content: dict[str, str] = {}
+        # Track extraction dirs for cleanup
+        extraction_dirs: list[Path] = []
+        
+        active_urls = active_urls or []
 
         for ext in extensions_data:
             ext_id = ext["id"]
@@ -113,31 +134,77 @@ class ScanService:
             # 4. Category inference
             category = infer_category(name, description, permissions)
 
-            # 5. Power score
-            power_score = compute_power_score(permissions, host_permissions)
+            # 5. Reach score (v4: renamed from power_score)
+            reach_score = compute_reach_score(permissions, host_permissions)
 
-            # 6. Source code analysis (if deep scan enabled)
+            # 6. Deep source code analysis (always on in v4)
             signals = []
             timeline = []
-            if enable_deep_scan and install_type != "development":
+            crx_manifest = None
+            bg_snippet = ""
+            max_obf_str = ""
+            if install_type != "development":
                 try:
                     crx_result = download_and_extract(ext_id)
                     if crx_result.success and crx_result.extract_dir:
-                        manifest = crx_result.manifest or {}
-                        signals, timeline = analyze_codebase(
-                            crx_result.extract_dir, manifest, permissions, host_permissions
+                        crx_manifest = crx_result.manifest or {}
+                        all_manifests[ext_id] = crx_manifest
+
+                        # For single-scan flow: update metadata from extracted manifest
+                        if name == "Unknown" and crx_manifest:
+                            from backend.scanner import resolve_localized_value
+                            raw_name = crx_manifest.get("name", "Unknown")
+                            name = resolve_localized_value(raw_name, crx_result.extract_dir, crx_manifest.get("default_locale")) or raw_name
+                            raw_desc = crx_manifest.get("description", "")
+                            description = resolve_localized_value(raw_desc, crx_result.extract_dir, crx_manifest.get("default_locale")) or raw_desc
+                            version = crx_manifest.get("version", version)
+                            permissions = crx_manifest.get("permissions", permissions)
+                            host_permissions = crx_manifest.get("host_permissions", host_permissions)
+                            # Re-compute category and reach with real permissions
+                            category = infer_category(name, description, permissions)
+                            reach_score = compute_reach_score(permissions, host_permissions)
+
+                        signals, timeline, bg_snippet, max_obf_str = analyze_codebase(
+                            crx_result.extract_dir, crx_manifest, permissions, host_permissions
                         )
-                        cleanup_extraction(crx_result.extract_dir)
+                        # Collect JS content for intel burst
+                        js_blobs = []
+                        for js_file in crx_result.extract_dir.rglob("*.js"):
+                            try:
+                                if js_file.stat().st_size > 1_000_000:
+                                    continue
+                                js_blobs.append(js_file.read_text(encoding="utf-8", errors="ignore"))
+                            except Exception:
+                                continue
+                        extension_js_content[ext_id] = "\n".join(js_blobs)
+
+                        # Delta cache check
+                        try:
+                            from backend.delta_cache import delta_cache, build_js_structure
+                            js_structure = build_js_structure(str(crx_result.extract_dir))
+                            delta_result = delta_cache.check_and_record(
+                                ext_id, version, b"",  # crx_hash computed internally
+                                js_structure
+                            )
+                        except Exception as e:
+                            delta_result = None
+                            log.debug("Delta cache error for %s: %s", ext_id, e)
+
+                        extraction_dirs.append(crx_result.extract_dir)
                     else:
+                        delta_result = None
                         timeline.append(f"CRX analysis skipped: {crx_result.error}")
                 except Exception as e:
+                    delta_result = None
                     timeline.append(f"CRX analysis error: {str(e)[:100]}")
+            else:
+                delta_result = None
 
             if not timeline:
                 timeline.append("Online scan — metadata analysis only.")
 
-            # 7. Suspicion score
-            raw_suspicion = compute_suspicion_score(
+            # 7. Behavioral Anomaly score (v4: renamed from suspicion_score)
+            raw_anomaly = compute_anomaly_score(
                 signals, len(intel_matches), store_status,
                 extension_id=ext_id, category=category, permissions=permissions,
             )
@@ -145,16 +212,62 @@ class ScanService:
             # Apply reputation adjustment
             if reputation_score >= 0:
                 adjustment = compute_reputation_adjustment(reputation_score)
-                adjusted_suspicion = int(raw_suspicion * adjustment)
+                adjusted_anomaly = int(raw_anomaly * adjustment)
             else:
-                adjusted_suspicion = raw_suspicion
+                adjusted_anomaly = raw_anomaly
 
-            suspicion_score = min(adjusted_suspicion, 100)
+            # Intel burst: check extracted domains against threat intel APIs
+            domain_intel_results = []
+            anomaly_boost = 0
+            if ext_id in extension_js_content:
+                try:
+                    from backend.intel_burst import extract_domains_from_code, burst_check_domains_sync, compute_anomaly_boost
+                    domains = extract_domains_from_code(extension_js_content[ext_id])
+                    if domains:
+                        intel_report = burst_check_domains_sync(domains, timeout=2.0)
+                        domain_intel_results = intel_report.results
+                        anomaly_boost = compute_anomaly_boost(intel_report)
+                except Exception as e:
+                    log.debug("Intel burst error for %s: %s", ext_id, e)
 
-            # 8. Verdict
-            enabled_state = "enabled" if enabled else "disabled"
-            verdict = choose_verdict(
-                enabled_state, power_score, suspicion_score, len(intel_matches),
+            # Apply intel burst boost
+            adjusted_anomaly = min(adjusted_anomaly + anomaly_boost, 100)
+
+            # Supply-chain delta boost
+            if delta_result and delta_result.severity == "critical":
+                signals.append(SuspiciousSignal(
+                    code="supply_chain_update",
+                    title="Silent Supply-Chain Update Detected",
+                    severity=25,
+                    detail=f"Version {delta_result.new_version} has suspicious structural changes compared to {delta_result.old_version}: "
+                           + "; ".join(delta_result.structural_changes[:3]),
+                    evidence=delta_result.structural_changes[:5],
+                ))
+                adjusted_anomaly = min(adjusted_anomaly + 25, 100)
+                timeline.append(f"Supply-chain risk: {delta_result.risk_assessment}")
+
+            # Phase 2 AI Integration
+            ai_results = {}
+            if enable_ai:
+                from backend.ai import run_phase2_ai
+                ai_results = run_phase2_ai(name, description, bg_snippet, permissions, active_urls, max_obf_str)
+                intent = ai_results.get("intent") or {}
+                if intent.get("is_deceptive"):
+                    signals.append(SuspiciousSignal(
+                        code="ai_deceptive_intent",
+                        title="AI Intent Classification Warning",
+                        severity=25,
+                        detail=f"AI classified this as {intent.get('category')} and flagged it as deceptive: {intent.get('reason')}",
+                        evidence=["Semantic Intent Classifier (Zero-Shot)"],
+                    ))
+                    adjusted_anomaly = min(adjusted_anomaly + 25, 100)
+                    timeline.append("AI flagged extension description as deceptive compared to code.")
+
+            anomaly_score = min(adjusted_anomaly, 100)
+
+            # 8. Verdict (v4: new ladder)
+            verdict, sub_verdict = choose_verdict(
+                reach_score, anomaly_score, len(intel_matches),
                 store_status, extension_id=ext_id, reputation_score=reputation_score,
             )
 
@@ -168,6 +281,7 @@ class ScanService:
                     pass
 
             # Build finding
+            from backend.models import DomainIntelResult as DomainIntelResultModel
             finding = ExtensionFinding(
                 id=ext_id,
                 name=name,
@@ -185,15 +299,16 @@ class ScanService:
                         profile_name="Browser Scan",
                         browser_channel="online",
                         browser_family="chromium",
-                        enabled_state=enabled_state,
+                        enabled_state="enabled" if enabled else "disabled",
                         install_source=install_type,
                         version=version,
                         manifest_path="",
                     )
                 ],
-                power_score=power_score,
-                suspicion_score=suspicion_score,
+                reach_score=reach_score,
+                anomaly_score=anomaly_score,
                 verdict=verdict,
+                sub_verdict=sub_verdict,
                 store_status=store_status,
                 suspicious_signals=signals,
                 intel_matches=intel_matches,
@@ -202,20 +317,48 @@ class ScanService:
                 category=category,
                 reputation_score=reputation_score,
                 reputation_details=reputation_details,
-                adjusted_suspicion_score=suspicion_score,
+                adjusted_anomaly_score=anomaly_score,
                 recommendations=recommendations,
+                domain_intel=[
+                    DomainIntelResultModel(
+                        domain=r.domain, source=r.source,
+                        is_malicious=r.is_malicious, confidence=r.confidence,
+                        detail=r.detail, last_checked=r.last_checked,
+                    ) for r in domain_intel_results
+                ] if domain_intel_results else [],
+                version_delta=delta_result,
+                intent_classification=ai_results.get("intent"),
+                attack_simulation=ai_results.get("attack"),
+                deobfuscated_payload=ai_results.get("deobfuscated"),
             )
             findings.append(finding)
 
+        # ── Cross-extension collusion analysis ────────────────
+        try:
+            from backend.collusion import analyze_collusion
+            collusion_report = analyze_collusion(extensions_data, all_manifests)
+            # Attach collusion edges to affected findings
+            for finding in findings:
+                finding.collusion_edges = [
+                    edge for edge in collusion_report.edges
+                    if edge.source_id == finding.id or edge.target_id == finding.id
+                ]
+        except Exception as e:
+            log.debug("Collusion analysis error: %s", e)
+
+        # Cleanup all extraction directories
+        for extract_dir in extraction_dirs:
+            cleanup_extraction(extract_dir)
+
         # Enrich with AI if requested
-        maybe_enrich_with_ai(findings, enable_ai)
+        maybe_enrich_with_ai(findings, enable_ai, ai_config=ai_config)
 
         # Sort by risk
         findings.sort(
             key=lambda f: (
                 f.verdict != "known_malicious",
-                -f.suspicion_score,
-                -f.power_score,
+                -f.anomaly_score,
+                -f.reach_score,
                 f.name.lower(),
             )
         )
@@ -231,33 +374,289 @@ class ScanService:
             findings=findings,
             report_dir=report_dir,
         )
-        self._scans[scan_id] = record
+        with self._lock:
+            self._scans[scan_id] = record
         write_json_report(record, report_dir / f"{scan_id}.json")
         return record
 
-    def import_csv_report(self, filename: str, content: bytes) -> ScanRecord:
-        scan_id = uuid.uuid4().hex[:12]
-        from backend.scanner import import_legacy_csv
-        findings = import_legacy_csv(filename, content)
+    # ── Local OS scan (Windows only) ──────────────────────────
+
+    def create_local_scan(self, enable_ai: bool = False, ai_config: dict[str, str] | None = None) -> ScanRecord:
+        """Fast local scan: reads extension files directly from disk.
+
+        Key optimisations vs. the online pipeline:
+        - Reads the already-extracted manifest / JS directly (no CRX download).
+        - Runs each extension in a ThreadPoolExecutor (8 workers).
+        - Skips intel burst (URLScan/OTX/VT) to keep latency low.
+        - Hard cap of 50 extensions to prevent runaway scans.
+        """
+        from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
+
+        from backend.intel import lookup_intel
+        from backend.models import ExtensionFinding, ProfileInstall, ScanOptions, SuspiciousSignal
+        from backend.reputation import compute_reputation_adjustment, fetch_reputation
+        from backend.scanner import (
+            analyze_codebase,
+            choose_verdict,
+            compute_anomaly_score,
+            compute_reach_score,
+            infer_category,
+        )
+        from backend.store import lookup_store_status
+
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if not local_app_data:
+            raise ValueError("LOCALAPPDATA not found. This feature only works on Windows.")
+
+        chrome_user_data = Path(local_app_data) / "Google" / "Chrome" / "User Data"
+        if not chrome_user_data.exists():
+            raise ValueError("Chrome User Data not found. Make sure Chrome is installed.")
+
+        # ── 1. Discover local extensions ─────────────────────
+        ext_dirs: dict[str, Path] = {}  # id -> version dir (deduplicated)
+        profiles = ["Default"] + [d.name for d in chrome_user_data.glob("Profile *") if d.is_dir()]
+
+        for profile in profiles:
+            ext_base = chrome_user_data / profile / "Extensions"
+            if not ext_base.exists():
+                continue
+            for ext_id_path in ext_base.iterdir():
+                if not ext_id_path.is_dir() or len(ext_id_path.name) != 32:
+                    continue
+                if ext_id_path.name in ext_dirs:
+                    continue  # already have this extension from another profile
+                versions = [d for d in ext_id_path.iterdir() if d.is_dir()]
+                if not versions:
+                    continue
+                latest = sorted(versions, key=lambda x: x.name)[-1]
+                if (latest / "manifest.json").exists():
+                    ext_dirs[ext_id_path.name] = latest
+
+        if not ext_dirs:
+            raise ValueError("No installed Chrome extensions found on this machine.")
+
+        # Cap at 50 to keep scan time reasonable
+        MAX_EXTENSIONS = 50
+        all_ids = list(ext_dirs.keys())[:MAX_EXTENSIONS]
+        log.info("Local scan: found %d extensions (capped at %d)", len(ext_dirs), MAX_EXTENSIONS)
+
+        # ── 2. Per-extension worker ────────────────────────────
+        def scan_one(ext_id: str) -> ExtensionFinding | None:
+            version_dir = ext_dirs[ext_id]
+            try:
+                manifest = json.loads((version_dir / "manifest.json").read_text(encoding="utf-8", errors="ignore"))
+            except Exception:
+                return None
+
+            name = manifest.get("name", "Unknown")
+            # Strip Chrome i18n placeholder e.g. __MSG_appName__
+            if name.startswith("__MSG_"):
+                name = manifest.get("short_name", name.replace("__MSG_", "").replace("__", "").replace("_", " ").title())
+            version = manifest.get("version", "unknown")
+            description = manifest.get("description", "")
+            if description.startswith("__MSG_"):
+                description = ""
+            permissions = manifest.get("permissions", [])
+            host_permissions = manifest.get("host_permissions", [])
+
+            # Skip Chrome internal extensions
+            if name in ("Chrome", "Chromium") or ext_id.startswith("nmmhkkegcc"):
+                return None
+
+            # Fast checks (no network)
+            intel_matches = lookup_intel(ext_id)
+            store_status = lookup_store_status(ext_id).status
+            category = infer_category(name, description, permissions)
+            reach_score = compute_reach_score(permissions, host_permissions)
+
+            # Reputation (network — fast, uses cache)
+            reputation_score = -1
+            reputation_details = None
+            try:
+                rep = fetch_reputation(ext_id)
+                if rep.lookup_status == "success":
+                    reputation_score = rep.reputation_score
+                    reputation_details = rep.to_dict()
+            except Exception:
+                pass
+
+            # Local JS analysis — read directly from disk, no download needed
+            signals: list[SuspiciousSignal] = []
+            timeline: list[str] = ["Local scan — reading extension files from disk."]
+            try:
+                signals, timeline_extra, _, _ = analyze_codebase(
+                    version_dir, manifest, permissions, host_permissions
+                )
+                timeline += timeline_extra
+            except Exception as e:
+                timeline.append(f"Code analysis error: {str(e)[:80]}")
+
+            # Anomaly score
+            raw_anomaly = compute_anomaly_score(
+                signals, len(intel_matches), store_status,
+                extension_id=ext_id, category=category, permissions=permissions,
+            )
+            if reputation_score >= 0:
+                from backend.reputation import compute_reputation_adjustment
+                raw_anomaly = int(raw_anomaly * compute_reputation_adjustment(reputation_score))
+            anomaly_score = min(raw_anomaly, 100)
+
+            verdict, sub_verdict = choose_verdict(
+                reach_score, anomaly_score, len(intel_matches),
+                store_status, extension_id=ext_id, reputation_score=reputation_score,
+            )
+
+            # Recommendations for flagged extensions
+            recommendations: list[dict] = []
+            if verdict in ("suspicious", "moderate_risk", "known_malicious"):
+                try:
+                    from backend.recommendations import get_recommendations
+                    recs = get_recommendations(name, description, category)
+                    recommendations = [r.to_dict() for r in recs]
+                except Exception:
+                    pass
+
+            return ExtensionFinding(
+                id=ext_id,
+                name=name,
+                version=version,
+                description=description,
+                manifest_version=manifest.get("manifest_version", 2),
+                permissions=permissions,
+                optional_permissions=[],
+                host_permissions=host_permissions,
+                optional_host_permissions=[],
+                content_script_matches=[],
+                profiles=[
+                    ProfileInstall(
+                        profile_id="local",
+                        profile_name="Local Chrome",
+                        browser_channel="stable",
+                        browser_family="chromium",
+                        enabled_state="enabled",
+                        install_source="local",
+                        version=version,
+                        manifest_path=str(version_dir / "manifest.json"),
+                    )
+                ],
+                reach_score=reach_score,
+                anomaly_score=anomaly_score,
+                verdict=verdict,
+                sub_verdict=sub_verdict,
+                store_status=store_status,
+                suspicious_signals=signals,
+                intel_matches=intel_matches,
+                evidence_timeline=timeline,
+                homepage_url=manifest.get("homepage_url", ""),
+                category=category,
+                reputation_score=reputation_score,
+                reputation_details=reputation_details,
+                adjusted_anomaly_score=anomaly_score,
+                recommendations=recommendations,
+                domain_intel=[],
+                version_delta=None,
+                intent_classification=None,
+                attack_simulation=None,
+                deobfuscated_payload=None,
+            )
+
+        # ── 3. Run in parallel ─────────────────────────────────
+        findings: list[ExtensionFinding] = []
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            futures = {pool.submit(scan_one, eid): eid for eid in all_ids}
+            for future in as_completed(futures):
+                try:
+                    result = future.result(timeout=30)
+                    if result is not None:
+                        findings.append(result)
+                except FuturesTimeout:
+                    log.warning("Extension %s timed out during local scan", futures[future])
+                except Exception as e:
+                    log.warning("Extension %s failed: %s", futures[future], e)
+
+        if not findings:
+            raise ValueError("No extensions could be analyzed.")
+
+        # Sort by risk
+        findings.sort(key=lambda f: (
+            f.verdict != "known_malicious",
+            -f.anomaly_score,
+            -f.reach_score,
+            f.name.lower(),
+        ))
+
+        # AI enrichment (generate summaries if enabled)
+        maybe_enrich_with_ai(findings, enable_ai, ai_config=ai_config)
+
+        # ── 4. Save and return ─────────────────────────────────
+        scan_id = uuid.uuid4().hex  # Full 32 hex chars for enumeration resistance
+        report_dir = self.data_dir / scan_id
+        report_dir.mkdir(parents=True, exist_ok=True)
         record = ScanRecord(
             scan_id=scan_id,
             created_at=datetime.now(timezone.utc),
             status="completed",
-            source="csv_import",
-            options=ScanOptions(),
+            source="local_scan",
+            options=ScanOptions(enable_live_checks=True, enable_ai=enable_ai),
             findings=findings,
-            report_dir=self.data_dir / scan_id,
+            report_dir=report_dir,
         )
-        record.report_dir.mkdir(parents=True, exist_ok=True)
-        self._scans[scan_id] = record
-        write_json_report(record, record.report_dir / f"{scan_id}.json")
+        with self._lock:
+            self._scans[scan_id] = record
+        write_json_report(record, report_dir / f"{scan_id}.json")
+        log.info("Local scan complete: %d extensions in scan %s", len(findings), scan_id)
         return record
 
+
+    # ── Single extension scan ─────────────────────────────
+
+    def create_single_extension_scan(
+        self,
+        extension_id: str,
+        enable_ai: bool = False,
+        ai_config: dict[str, str] | None = None,
+    ) -> dict:
+        """Scan a single extension by Chrome Web Store ID.
+
+        Validates the ID format, constructs a minimal extension dict, and
+        delegates to create_online_scan() which handles CRX download,
+        manifest extraction, and the full analysis pipeline.
+        """
+        import re
+
+        # Validate extension ID format: 32 lowercase a-p characters
+        if not re.fullmatch(r"[a-p]{32}", extension_id):
+            return {"error": "Invalid extension ID format. Must be 32 lowercase a-p characters."}
+
+        ext_data = {
+            "id": extension_id,
+            "name": "Unknown",  # Will be updated during CRX analysis
+            "version": "0.0.0",
+            "description": "",
+            "permissions": [],
+            "hostPermissions": [],
+            "enabled": True,
+            "installType": "normal",
+        }
+
+        record = self.create_online_scan(
+            [ext_data],
+            active_urls=[],
+            enable_ai=enable_ai,
+            ai_config=ai_config,
+        )
+        return record.to_summary_dict()
+
+    # ── Read operations ───────────────────────────────────
+
     def list_scans(self) -> list[ScanRecord]:
-        return sorted(self._scans.values(), key=lambda scan: scan.created_at, reverse=True)
+        with self._lock:
+            scans = list(self._scans.values())
+        return sorted(scans, key=lambda scan: scan.created_at, reverse=True)
 
     def get_scan(self, scan_id: str) -> ScanRecord | None:
-        return self._scans.get(scan_id)
+        with self._lock:
+            return self._scans.get(scan_id)
 
     def get_extension(self, scan_id: str, extension_id: str) -> ExtensionFinding | None:
         scan = self.get_scan(scan_id)

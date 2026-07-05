@@ -1,13 +1,18 @@
 export type Verdict =
   | "trusted"
   | "low_concern"
-  | "powerful_but_expected"
   | "moderate_risk"
   | "suspicious"
   | "known_malicious"
-  | "removed_or_unavailable"
-  | "disabled_by_chrome"
   | "unknown";
+
+export type Theme = 'light' | 'dark' | 'system';
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+}
 
 export interface ProfileInstall {
   profile_id: string;
@@ -63,6 +68,38 @@ export interface Recommendation {
   install_url: string;
 }
 
+// v4 Phase 1 types
+
+export interface CollusionEdge {
+  source_id: string;
+  source_name: string;
+  target_id: string;
+  target_name: string;
+  risk_type: string;
+  detail: string;
+  severity: string;
+}
+
+export interface DomainIntelResult {
+  domain: string;
+  source: string;
+  isMalicious: boolean;
+  confidence: number;
+  detail: string;
+  lastChecked: string;
+}
+
+export interface DeltaResult {
+  extensionId: string;
+  oldVersion: string;
+  newVersion: string;
+  structuralChanges: string[];
+  riskAssessment: string;
+  newEvalCountDelta: number;
+  newObfuscatedDelta: number;
+  severity: string;
+}
+
 export interface ExtensionFinding {
   id: string;
   name: string;
@@ -72,9 +109,10 @@ export interface ExtensionFinding {
   profiles: ProfileInstall[];
   enabledState: string;
   installSource: string;
-  powerScore: number;
-  suspicionScore: number;
+  reachScore: number;
+  anomalyScore: number;
   verdict: Verdict;
+  subVerdict?: string | null;
   storeStatus: string;
   permissions: string[];
   optionalPermissions: string[];
@@ -92,15 +130,24 @@ export interface ExtensionFinding {
   category?: string;
   reputationScore?: number;
   reputationDetails?: ReputationDetails;
-  adjustedSuspicionScore?: number;
+  adjustedAnomalyScore?: number;
   recommendations?: Recommendation[];
+  // v4 Phase 1 fields
+  collusionEdges?: CollusionEdge[];
+  domainIntel?: DomainIntelResult[];
+  versionDelta?: DeltaResult | null;
+  intentClassification?: {
+    category: string;
+    is_deceptive: boolean;
+    reason: string;
+  };
+  attackSimulation?: string;
+  deobfuscatedPayload?: string;
 }
 
 export interface ScanSummary {
   totalExtensions: number;
   verdictDistribution: Record<string, number>;
-  profilesScanned: string[];
-  channelsScanned: string[];
 }
 
 export interface ScanRecord {
@@ -110,11 +157,8 @@ export interface ScanRecord {
   status: string;
   source: string;
   options: {
-    profiles: string[];
-    channels: string[];
     enableLiveChecks: boolean;
     enableAi: boolean;
-    roots?: string[];
   };
   summary: ScanSummary;
   extensions?: ExtensionFinding[];

@@ -1,4 +1,5 @@
 import type { ExtensionFinding, Recommendation, ScanRecord } from "./types";
+import { getAIHeaders } from "./components/AISettings";
 
 const API_BASE = import.meta.env.VITE_MANIFESTGUARD_API_URL ?? "http://127.0.0.1:8000/api";
 
@@ -15,19 +16,6 @@ export function listScans(): Promise<ScanRecord[]> {
   return request<ScanRecord[]>("/scans");
 }
 
-export function createScan(payload: {
-  profiles: string[];
-  channels: string[];
-  enableLiveChecks: boolean;
-  enableAi: boolean;
-}): Promise<ScanRecord> {
-  return request<ScanRecord>("/scans", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-}
-
 export function createOnlineScan(payload: {
   extensions: Array<{
     id: string;
@@ -40,11 +28,10 @@ export function createOnlineScan(payload: {
     installType: string;
   }>;
   enableAi: boolean;
-  enableDeepScan: boolean;
 }): Promise<ScanRecord> {
   return request<ScanRecord>("/scans/online", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...getAIHeaders() },
     body: JSON.stringify(payload),
   });
 }
@@ -65,19 +52,56 @@ export function fetchRecommendations(scanId: string, extensionId: string): Promi
   return request<Recommendation[]>(`/scans/${scanId}/extensions/${extensionId}/recommendations`);
 }
 
-export async function importCsv(file: File): Promise<ScanRecord> {
-  const body = new FormData();
-  body.append("file", file);
-  const response = await fetch(`${API_BASE}/imports/csv`, {
-    method: "POST",
-    body,
-  });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-  return response.json() as Promise<ScanRecord>;
-}
-
 export function reportUrl(scanId: string, formatName: "csv" | "json" | "html" | "pdf"): string {
   return `${API_BASE}/scans/${scanId}/reports/${formatName}`;
+}
+
+export function chatWithExtension(scanId: string, extensionId: string, message: string): Promise<{reply: string}> {
+  return request<{reply: string}>(`/scans/${scanId}/extensions/${extensionId}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAIHeaders() },
+    body: JSON.stringify({ message }),
+  });
+}
+export async function scanLocalExtensions(enableAi: boolean = false): Promise<ScanRecord> {
+  const res = await fetch(`${API_BASE}/scans/local`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAIHeaders() },
+    body: JSON.stringify({ enableAi })
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: 'Server error' }));
+    throw new Error(error.detail || `Server error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function scanSingleExtension(extensionId: string, enableAi: boolean = false): Promise<ScanRecord> {
+  const res = await fetch(`${API_BASE}/scans/single`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAIHeaders() },
+    body: JSON.stringify({ extensionId, enableAi }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Scan failed' }));
+    throw new Error(err.detail || 'Scan failed');
+  }
+  return res.json();
+}
+
+/** Extract extension ID from CWS URL or raw ID */
+export function parseExtensionInput(input: string): string | null {
+  const trimmed = input.trim();
+  // Match raw 32-char ID (a-p lowercase)
+  if (/^[a-p]{32}$/.test(trimmed)) return trimmed;
+  // Match Chrome Web Store URL
+  const urlMatch = trimmed.match(/chrome\.google\.com\/webstore\/detail\/[^/]*\/([a-p]{32})/);
+  if (urlMatch) return urlMatch[1];
+  // Match new CWS URL format
+  const newUrlMatch = trimmed.match(/chromewebstore\.google\.com\/detail\/[^/]*\/([a-p]{32})/);
+  if (newUrlMatch) return newUrlMatch[1];
+  // Try to find any 32-char ID in the string
+  const idMatch = trimmed.match(/([a-p]{32})/);
+  if (idMatch) return idMatch[1];
+  return null;
 }
