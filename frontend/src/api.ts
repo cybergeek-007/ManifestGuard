@@ -3,6 +3,21 @@ import { getAIHeaders } from "./components/AISettings";
 
 const API_BASE = import.meta.env.VITE_MANIFESTGUARD_API_URL ?? "http://127.0.0.1:8000/api";
 
+/**
+ * Local extension scanning reads Chrome's on-disk extension directory, so it
+ * only works when the backend runs on the user's own machine. On a hosted
+ * deployment (e.g. Render) the request can never succeed and would return a
+ * 400, so we detect a remote backend and guide the user instead of firing it.
+ */
+export function isLocalScanSupported(): boolean {
+  try {
+    const host = new URL(API_BASE, window.location.origin).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "[::1]";
+  } catch {
+    return false;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, init);
   if (!response.ok) {
