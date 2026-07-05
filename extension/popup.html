@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ManifestGuard</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="brand">
+        <img src="icons/icon48.png" alt="" class="brand-logo" width="24" height="24" />
+        <span class="brand-name">ManifestGuard</span>
+      </div>
+      <span class="brand-tag">Companion</span>
+    </header>
+
+    <main class="main">
+      <section id="intro" class="panel">
+        <h1 class="title">Audit your installed extensions</h1>
+        <p class="subtitle">
+          Scan every extension in this browser for over-privileged, anomalous,
+          and known-malicious behavior.
+        </p>
+
+        <label class="field">
+          <span class="field-label">Backend URL</span>
+          <input
+            id="backend-url"
+            class="field-input"
+            type="url"
+            placeholder="http://localhost:8000"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </label>
+
+        <label class="checkbox">
+          <input id="enable-ai" type="checkbox" />
+          <span>Enable AI verdict explanation (uses your saved API key)</span>
+        </label>
+
+        <button id="scan-btn" class="btn btn-primary">
+          <span class="btn-label">Audit my extensions</span>
+        </button>
+
+        <p id="count-hint" class="hint"></p>
+      </section>
+
+      <section id="progress" class="panel hidden">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="progress-text" class="progress-text">Collecting extensions…</p>
+      </section>
+
+      <section id="result" class="panel hidden">
+        <div id="result-badge" class="result-badge"></div>
+        <p id="result-text" class="result-text"></p>
+        <button id="open-report" class="btn btn-primary">Open full report</button>
+        <button id="rescan" class="btn btn-ghost">Scan again</button>
+      </section>
+
+      <section id="error" class="panel hidden">
+        <p id="error-text" class="error-text"></p>
+        <button id="retry" class="btn btn-ghost">Try again</button>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Keys and data never leave your machine unless you point at a remote backend.</span>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

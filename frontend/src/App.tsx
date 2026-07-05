@@ -11,6 +11,8 @@ import ReportExport from './components/ReportExport';
 import EmptyState from './components/EmptyState';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import AISettings, { getAIConfig } from './components/AISettings';
+import CollusionGraph from './components/CollusionGraph';
+import WatchlistPanel from './components/WatchlistPanel';
 
 type Filters = {
   verdict: string;
@@ -28,6 +30,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAiSettings, setShowAiSettings] = useState(false);
+  const [view, setView] = useState<'inventory' | 'graph' | 'watchlist'>('inventory');
 
   // On mount: load scans + handle ?scan= deep-link from companion extension
   useEffect(() => {
@@ -126,6 +129,29 @@ function App() {
       )}
 
       {activeScan && (
+        <nav className="view-tabs" aria-label="Dashboard views">
+          <button
+            className={`view-tab ${view === 'inventory' ? 'active' : ''}`}
+            onClick={() => setView('inventory')}
+          >
+            Inventory
+          </button>
+          <button
+            className={`view-tab ${view === 'graph' ? 'active' : ''}`}
+            onClick={() => setView('graph')}
+          >
+            Collusion Graph
+          </button>
+          <button
+            className={`view-tab ${view === 'watchlist' ? 'active' : ''}`}
+            onClick={() => setView('watchlist')}
+          >
+            Watchlist
+          </button>
+        </nav>
+      )}
+
+      {activeScan && view === 'inventory' && (
         <div className="main-content">
           <InventoryTable
             extensions={extensions}
@@ -150,7 +176,25 @@ function App() {
         </div>
       )}
 
-      {activeScan && (
+      {activeScan && view === 'graph' && (
+        <div className="panel-card">
+          <CollusionGraph
+            extensions={extensions}
+            onSelectExtension={id => {
+              setView('inventory');
+              void handleSelectExtension(id);
+            }}
+          />
+        </div>
+      )}
+
+      {activeScan && view === 'watchlist' && (
+        <div className="panel-card">
+          <WatchlistPanel />
+        </div>
+      )}
+
+      {activeScan && view === 'inventory' && (
         <ReportExport scanId={activeScan.scanId} />
       )}
 

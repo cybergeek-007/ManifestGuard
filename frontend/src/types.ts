@@ -100,6 +100,31 @@ export interface DeltaResult {
   severity: string;
 }
 
+export interface CloneMatch {
+  extensionId: string;
+  name: string;
+  similarity: number;
+  matchType: string;
+  detail: string;
+}
+
+export interface WatchAlert {
+  type: string;
+  severity: string;
+  message: string;
+  at: string;
+}
+
+export interface WatchEntry {
+  extensionId: string;
+  name: string;
+  addedAt: string;
+  lastVersion: string | null;
+  lastChecked: string | null;
+  lastVerdict: string | null;
+  alerts: WatchAlert[];
+}
+
 export interface ExtensionFinding {
   id: string;
   name: string;
@@ -143,6 +168,7 @@ export interface ExtensionFinding {
   };
   attackSimulation?: string;
   deobfuscatedPayload?: string;
+  cloneMatches?: CloneMatch[];
 }
 
 export interface ScanSummary {
