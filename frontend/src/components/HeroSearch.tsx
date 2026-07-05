@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { parseExtensionInput, scanSingleExtension, scanLocalExtensions } from '../api';
+import { parseExtensionInput, scanSingleExtension, scanLocalExtensions, isLocalScanSupported } from '../api';
 
 interface HeroSearchProps {
   enableAi: boolean;
@@ -46,7 +46,15 @@ export default function HeroSearch({ enableAi, onEnableAiChange, onScanComplete 
     void handleScan();
   }
 
+  const localScanSupported = isLocalScanSupported();
+
   function handleLocalScanClick() {
+    if (!localScanSupported) {
+      setError(
+        'Scanning installed extensions only works when running ManifestGuard locally. On the hosted app, paste an extension URL or ID above, or use the ManifestGuard browser extension.',
+      );
+      return;
+    }
     setShowPermission(true);
   }
 
