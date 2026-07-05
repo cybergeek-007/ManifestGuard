@@ -7,7 +7,7 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: ALLOWED_ORIGINS
-        value: https://manifestguard.onrender.com,chrome-extension://nmlkkglnnkgigimofnhmbdnpmnimldif
+        value: https://manifest-guard.vercel.app,https://manifestguard-backend.onrender.com,https://manifestguard.onrender.com,chrome-extension://nmlkkglnnkgigimofnhmbdnpmnimldif
       - key: GROQ_API_KEY
         sync: false
       - key: VIRUSTOTAL_API_KEY

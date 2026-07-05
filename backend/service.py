@@ -182,13 +182,22 @@ class ScanService:
                         signals, timeline, bg_snippet, max_obf_str = analyze_codebase(
                             crx_result.extract_dir, crx_manifest, permissions, host_permissions
                         )
-                        # Collect JS content for intel burst
+                        # Collect JS content for intel burst.
+                        # Hard total budget so a large extension can't exhaust
+                        # memory on constrained hosts (e.g. Render free tier,
+                        # 512MB) and OOM-kill the worker → 502 Bad Gateway.
                         js_blobs = []
+                        total_js_bytes = 0
+                        JS_TOTAL_BUDGET = 4 * 1024 * 1024  # 4MB across all files
                         for js_file in crx_result.extract_dir.rglob("*.js"):
                             try:
                                 if js_file.stat().st_size > 1_000_000:
                                     continue
-                                js_blobs.append(js_file.read_text(encoding="utf-8", errors="ignore"))
+                                content = js_file.read_text(encoding="utf-8", errors="ignore")
+                                total_js_bytes += len(content)
+                                if total_js_bytes > JS_TOTAL_BUDGET:
+                                    break  # enough sampled for intel burst
+                                js_blobs.append(content)
                             except Exception:
                                 continue
                         extension_js_content[ext_id] = "\n".join(js_blobs)
