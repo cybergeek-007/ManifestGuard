@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from backend.ai import maybe_enrich_with_ai
+from backend.database import database
 from backend.models import (
     ExtensionFinding,
     ProfileInstall,
@@ -41,23 +42,36 @@ class ScanService:
         self._load_existing_scans()
 
     def _load_existing_scans(self) -> None:
-        import re
-        _hex_dir = re.compile(r"^[a-f0-9]{12,32}$")
-        for report_file in sorted(self.data_dir.glob("*/*.json")):
-            # Skip non-scan directories (e.g. reputation_cache, intel_cache)
-            if not _hex_dir.match(report_file.parent.name):
-                continue
+        """Load scans from SQLite (migrating any legacy JSON reports first)."""
+        database.migrate_legacy_reports(self.data_dir)
+        for raw in database.load_all_scans():
             try:
-                raw = json.loads(report_file.read_text(encoding="utf-8"))
-                # Saved JSON may be nested: { "scan": {...}, "extensions": [...] }
+                # Stored JSON is nested: { "scan": {...}, "extensions": [...] }
                 if "scan" in raw:
                     payload = {**raw["scan"], "extensions": raw.get("extensions", [])}
                 else:
                     payload = raw
-                record = ScanRecord.from_dict(payload, report_file.parent)
+                scan_id = str(payload.get("scanId", payload.get("scan_id", "")))
+                record = ScanRecord.from_dict(payload, self.data_dir / scan_id)
             except Exception:
                 continue
             self._scans[record.scan_id] = record
+
+    def _persist_scan(self, record: ScanRecord) -> None:
+        """Write-through: register in memory and persist to SQLite."""
+        with self._lock:
+            self._scans[record.scan_id] = record
+        payload = {
+            "scan": record.to_summary_dict(),
+            "extensions": [finding.to_detail_dict() for finding in record.findings],
+        }
+        database.save_scan(
+            scan_id=record.scan_id,
+            created_at=record.created_at.isoformat(),
+            status=record.status,
+            source=record.source,
+            payload=payload,
+        )
 
     # ── Online scan (sole entry point) ────────────────────────
 
@@ -363,8 +377,6 @@ class ScanService:
             )
         )
 
-        report_dir = self.data_dir / scan_id
-        report_dir.mkdir(parents=True, exist_ok=True)
         record = ScanRecord(
             scan_id=scan_id,
             created_at=datetime.now(timezone.utc),
@@ -372,11 +384,9 @@ class ScanService:
             source="online_scan",
             options=ScanOptions(enable_live_checks=True, enable_ai=enable_ai),
             findings=findings,
-            report_dir=report_dir,
+            report_dir=self.data_dir / scan_id,
         )
-        with self._lock:
-            self._scans[scan_id] = record
-        write_json_report(record, report_dir / f"{scan_id}.json")
+        self._persist_scan(record)
         return record
 
     # ── Local OS scan (Windows only) ──────────────────────────
@@ -590,8 +600,6 @@ class ScanService:
 
         # ── 4. Save and return ─────────────────────────────────
         scan_id = uuid.uuid4().hex  # Full 32 hex chars for enumeration resistance
-        report_dir = self.data_dir / scan_id
-        report_dir.mkdir(parents=True, exist_ok=True)
         record = ScanRecord(
             scan_id=scan_id,
             created_at=datetime.now(timezone.utc),
@@ -599,11 +607,9 @@ class ScanService:
             source="local_scan",
             options=ScanOptions(enable_live_checks=True, enable_ai=enable_ai),
             findings=findings,
-            report_dir=report_dir,
+            report_dir=self.data_dir / scan_id,
         )
-        with self._lock:
-            self._scans[scan_id] = record
-        write_json_report(record, report_dir / f"{scan_id}.json")
+        self._persist_scan(record)
         log.info("Local scan complete: %d extensions in scan %s", len(findings), scan_id)
         return record
 
@@ -673,6 +679,7 @@ class ScanService:
             return None
 
         format_name = format_name.lower()
+        scan.report_dir.mkdir(parents=True, exist_ok=True)
         destination = scan.report_dir / f"{scan_id}.{format_name}"
         if format_name == "csv":
             return write_csv_report(scan, destination)
